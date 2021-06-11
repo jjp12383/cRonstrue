@@ -29,26 +29,74 @@ export class sl implements Locale {
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", od %s. do %s. dne v mesecu";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "od %s. do %s. dne v mesecu";
+  }
   commaEveryDay() {
     return ", vsak dan";
+  }
+  everyDay() {
+    return "vsak dan";
   }
   commaEveryX0Days() {
     return ", vsakih %s dni";
   }
+  everyX0Days() {
+    return "vsakih %s dni";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", vsakih %s dni v tednu";
+  }
+  everyX0DaysOfTheWeek() {
+    return "vsakih %s dni v tednu";
   }
   commaEveryX0Months() {
     return ", vsakih %s mesecev";
   }
+  everyX0Months() {
+    return "vsakih %s mesecev";
+  }
+  commaEveryMonth(): string {
+    return ", vsak mesec";
+  }
+  everyMonth(): string {
+    return "vsak mesec";
+  }
   commaEveryX0Years() {
     return ", vsakih %s let";
+  }
+  everyX0Years() {
+    return "vsakih %s let";
   }
   commaOnDayX0OfTheMonth() {
     return ", %s. dan v mesecu";
   }
+  onDayX0OfTheMonth() {
+    return "%s. dan v mesecu";
+  }
+  commaOnDayX0() {
+    return ", %s. dan";
+  }
+  onDayX0() {
+    return "%s. dan";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", %s. dan vsakega meseca";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "%s. dan vsakega meseca";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", %s. dan, vsakih %t mesecev";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s. dan, vsakih %t mesecev";
+  }
   commaOnlyInX0() {
     return ", samo v %s";
+  }
+  onlyInX0() {
+    return "samo v %s";
   }
   commaOnlyOnX0() {
     return ", samo v %s";
@@ -59,14 +107,26 @@ export class sl implements Locale {
   commaOnThe() {
     return ", ";
   }
+  onThe() {
+    return " ";
+  }
   commaOnTheLastDayOfTheMonth() {
-    return ", zadnji %s v mesecu";
+    return ", zadnji dan v mesecu";
+  }
+  lastDayOfTheMonth() {
+    return "zadnji dan v mesecu";
   }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", zadnji delovni dan v mesecu";
   }
+  lastWeekdayOfTheMonth() {
+    return "zadnji delovni dan v mesecu";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s dni pred koncem meseca";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s dni pred koncem meseca";
   }
   commaOnTheLastX0OfTheMonth() {
     return ", zadnji %s v mesecu";
@@ -74,8 +134,14 @@ export class sl implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", %s v mesecu";
   }
+  theX0OfTheMonth() {
+    return "%s v mesecu";
+  }
   commaX0ThroughX1() {
     return ", od %s do %s";
+  }
+  x0ThroughX1() {
+    return "od %s do %s";
   }
   everyHour() {
     return "vsako uro";
@@ -137,7 +203,13 @@ export class sl implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  yearX0ThroughYearX1(): string {
     return null;
   }
   atX0MinutesPastTheHourGt20(): string {

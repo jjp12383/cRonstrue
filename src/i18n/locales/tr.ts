@@ -11,7 +11,13 @@ export class tr implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  yearX0ThroughYearX1(): string {
     return null;
   }
   use24HourTimeFormatByDefault() {
@@ -71,11 +77,20 @@ export class tr implements Locale {
   commaEveryDay() {
     return ", her gün";
   }
+  everyDay() {
+    return "her gün";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", ayın her %s günü";
   }
+  everyX0DaysOfTheWeek() {
+    return "ayın her %s günü";
+  }
   commaX0ThroughX1() {
     return ", %s ile %s arasında";
+  }
+  x0ThroughX1() {
+    return "%s ile %s arasında";
   }
   first() {
     return "ilk";
@@ -95,6 +110,9 @@ export class tr implements Locale {
   commaOnThe() {
     return ", ayın ";
   }
+  onThe() {
+    return "ayın ";
+  }
   spaceX0OfTheMonth() {
     return " %s günü";
   }
@@ -113,17 +131,38 @@ export class tr implements Locale {
   commaEveryX0Months() {
     return ", %s ayda bir";
   }
+  everyX0Months() {
+    return "%s ayda bir";
+  }
+  commaEveryMonth(): string {
+    return ", her ayr";
+  }
+  everyMonth(): string {
+    return "her ay";
+  }
   commaOnlyInX0() {
     return ", sadece %s için";
+  }
+  onlyInX0() {
+    return "sadece %s için";
   }
   commaOnTheLastDayOfTheMonth() {
     return ", ayın son günü";
   }
+  lastDayOfTheMonth() {
+    return "ayın son günü";
+  }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", ayın son iş günü";
   }
+  lastWeekdayOfTheMonth() {
+    return "ayın son iş günü";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s ayın son gününden önceki günler";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s ayın son gününden önceki günler";
   }
   firstWeekday() {
     return "ilk iş günü";
@@ -134,17 +173,50 @@ export class tr implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", ayın %s";
   }
+  theX0OfTheMonth() {
+    return "ayın %s";
+  }
   commaEveryX0Days() {
     return ", %s günde bir";
+  }
+  everyX0Days() {
+    return "%s günde bir";
   }
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", ayın %s. ve %s. günleri arası";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "ayın %s. ve %s. günleri arası";
+  }
   commaOnDayX0OfTheMonth() {
     return ", ayın %s. günü";
   }
+  onDayX0OfTheMonth() {
+    return "ayın %s. günü";
+  }
+  commaOnDayX0() {
+    return ", %s. günde";
+  }
+  onDayX0() {
+    return "%s gün";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return "her ayın %s. gününde";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "her ayın %s. günü";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return "%s. günde %t ayda bir";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s. gün, her %t ayda bir";
+  }
   commaEveryX0Years() {
     return ", %s yılda bir";
+  }
+  everyX0Years() {
+    return "%s yılda bir";
   }
   commaStartingX0() {
     return ", başlangıç %s";

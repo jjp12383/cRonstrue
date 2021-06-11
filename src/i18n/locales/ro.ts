@@ -30,26 +30,74 @@ export class ro implements Locale {
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", între zilele %s și %s ale lunii";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "între zilele %s și %s ale lunii";
+  }
   commaEveryDay() {
     return ", în fiecare zi";
+  }
+  everyDay() {
+    return "în fiecare zi";
   }
   commaEveryX0Days() {
     return ", la fiecare %s zile";
   }
+  everyX0Days() {
+    return "la fiecare %s zile";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", la fiecare a %s-a zi a săptămânii";
+  }
+  everyX0DaysOfTheWeek() {
+    return "la fiecare a %s-a zi a săptămânii";
   }
   commaEveryX0Months() {
     return ", la fiecare %s luni";
   }
+  everyX0Months() {
+    return "la fiecare %s luni";
+  }
+  commaEveryMonth(): string {
+    return ", in fiecare luna";
+  }
+  everyMonth(): string {
+    return "in fiecare luna";
+  }
   commaEveryX0Years() {
     return ", o dată la %s ani";
+  }
+  everyX0Years() {
+    return "o dată la %s ani";
   }
   commaOnDayX0OfTheMonth() {
     return ", în ziua %s a lunii";
   }
+  onDayX0OfTheMonth() {
+    return "în ziua %s a lunii";
+  }
+  commaOnDayX0() {
+    return ", în ziua %s";
+  }
+  onDayX0() {
+    return "ziua %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", în ziua %s a fiecărei luni";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "ziua %s a fiecărei luni";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", în ziua %s, la fiecare %t luni";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "ziua %s, la fiecare %t luni";
+  }
   commaOnlyInX0() {
     return ", doar în %s";
+  }
+  onlyInX0() {
+    return "doar în %s";
   }
   commaOnlyOnX0() {
     return ", doar %s";
@@ -60,14 +108,26 @@ export class ro implements Locale {
   commaOnThe() {
     return ", în ";
   }
+  onThe() {
+    return "în ";
+  }
   commaOnTheLastDayOfTheMonth() {
     return ", în ultima zi a lunii";
+  }
+  lastDayOfTheMonth() {
+    return "ultima zi a lunii"
   }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", în ultima zi lucrătoare a lunii";
   }
+  lastWeekdayOfTheMonth() {
+    return "ultima zi lucrătoare a lunii";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s zile înainte de ultima zi a lunii";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s zile înainte de ultima zi a lunii";
   }
   commaOnTheLastX0OfTheMonth() {
     return ", în ultima %s a lunii";
@@ -75,8 +135,14 @@ export class ro implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", în %s a lunii";
   }
+  theX0OfTheMonth() {
+    return "%s a lunii";
+  }
   commaX0ThroughX1() {
     return ", de %s până %s";
+  }
+  x0ThroughX1() {
+    return "de %s până %s";
   }
   everyHour() {
     return "în fiecare oră";
@@ -138,8 +204,14 @@ export class ro implements Locale {
   commaMonthX0ThroughMonthX1() {
     return ", din %s până în %s";
   }
+  monthX0ThroughMonthX1() {
+    return "din %s până în %s";
+  }
   commaYearX0ThroughYearX1() {
     return ", din %s până în %s";
+  }
+  yearX0ThroughYearX1() {
+    return "din %s până în %s";
   }
   atX0MinutesPastTheHourGt20() {
     return "la și %s de minute";

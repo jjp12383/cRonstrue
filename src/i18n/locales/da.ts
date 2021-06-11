@@ -29,26 +29,74 @@ export class da implements Locale {
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", mellem dag %s og %s i måneden";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "mellem dag %s og %s i måneden";
+  }
   commaEveryDay() {
     return ", hver dag";
+  }
+  everyDay() {
+    return "hver dag";
   }
   commaEveryX0Days() {
     return ", hver %s. dag";
   }
+  everyX0Days() {
+    return "hver %s. dag";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", hver %s. ugedag";
+  }
+  everyX0DaysOfTheWeek() {
+    return "hver %s. ugedag";
   }
   commaEveryX0Months() {
     return ", hver %s. måned";
   }
+  everyX0Months() {
+    return "hver %s. måned";
+  }
+  commaEveryMonth(): string {
+    return ", hver måneden";
+  }
+  everyMonth(): string {
+    return "hver måneden";
+  }
   commaEveryX0Years() {
     return ", hvert %s. år";
+  }
+  everyX0Years() {
+    return "hvert %s. år";
   }
   commaOnDayX0OfTheMonth() {
     return ", på dag %s i måneden";
   }
+  onDayX0OfTheMonth() {
+    return "på dag %s i måneden";
+  }
+  commaOnDayX0() {
+    return ", på dag %s";
+  }
+  onDayX0() {
+    return "dag %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", på dag %s i hver måned";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "%s av hver måned";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", på dag %s, hver %t måned";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s, hver %t måned";
+  }
   commaOnlyInX0() {
     return ", kun i %s";
+  }
+  onlyInX0() {
+    return "kun i %s";
   }
   commaOnlyOnX0() {
     return ", kun på %s";
@@ -59,14 +107,26 @@ export class da implements Locale {
   commaOnThe() {
     return ", på den ";
   }
+  onThe() {
+    return "på den ";
+  }
   commaOnTheLastDayOfTheMonth() {
     return ", på den sidste dag i måneden";
+  }
+  lastDayOfTheMonth() {
+    return "sidste dag i måneden"
   }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", på den sidste hverdag i måneden";
   }
+  lastWeekdayOfTheMonth() {
+    return "den sidste hverdag i måneden";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s dage før den sidste dag i måneden";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s dage før den sidste dag i måneden";
   }
   commaOnTheLastX0OfTheMonth() {
     return ", på den sidste %s i måneden";
@@ -74,8 +134,14 @@ export class da implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", på den %s i måneden";
   }
+  theX0OfTheMonth() {
+    return "den %s i måneden";
+  }
   commaX0ThroughX1() {
     return ", %s til og med %s";
+  }
+  x0ThroughX1() {
+    return "%s til og med %s";
   }
   everyHour() {
     return "hver time";
@@ -137,7 +203,13 @@ export class da implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  yearX0ThroughYearX1(): string {
     return null;
   }
   atX0MinutesPastTheHourGt20(): string {

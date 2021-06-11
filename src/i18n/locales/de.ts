@@ -11,7 +11,13 @@ export class de implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  yearX0ThroughYearX1(): string {
     return null;
   }
   use24HourTimeFormatByDefault() {
@@ -71,11 +77,20 @@ export class de implements Locale {
   commaEveryDay() {
     return ", jeden Tag";
   }
+  everyDay() {
+    return "jeden Tag";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", alle %s Tage der Woche";
   }
+  everyX0DaysOfTheWeek() {
+    return "alle %s Tage der Woche";
+  }
   commaX0ThroughX1() {
     return ", %s bis %s";
+  }
+  x0ThroughX1() {
+    return "%s bis %s";
   }
   first() {
     return "ersten";
@@ -95,6 +110,9 @@ export class de implements Locale {
   commaOnThe() {
     return ", am ";
   }
+  onThe() {
+    return "am ";
+  }
   spaceX0OfTheMonth() {
     return " %s des Monats";
   }
@@ -113,17 +131,38 @@ export class de implements Locale {
   commaEveryX0Months() {
     return ", alle %s Monate";
   }
+  everyX0Months() {
+    return "alle %s Monate";
+  }
+  commaEveryMonth(): string {
+    return ", alle Monats";
+  }
+  everyMonth(): string {
+    return "alle Monats";
+  }
   commaOnlyInX0() {
     return ", nur im %s";
+  }
+  onlyInX0() {
+    return "nur im %s";
   }
   commaOnTheLastDayOfTheMonth() {
     return ", am letzten Tag des Monats";
   }
+  lastDayOfTheMonth() {
+    return "letzten Tag des Monats";
+  }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", am letzten Werktag des Monats";
   }
+  lastWeekdayOfTheMonth() {
+    return "letzten Werktag des Monats";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s tage vor dem letzten Tag des Monats";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s tage vor dem letzten Tag des Monats";
   }
   firstWeekday() {
     return "ersten Werktag";
@@ -134,17 +173,50 @@ export class de implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", am %s des Monats";
   }
+  theX0OfTheMonth() {
+    return "%s des Monats";
+  }
   commaEveryX0Days() {
     return ", alle %s Tage";
+  }
+  everyX0Days() {
+    return "alle %s Tage";
   }
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", zwischen Tag %s und %s des Monats";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "zwischen Tag %s und %s des Monats";
+  }
   commaOnDayX0OfTheMonth() {
     return ", an Tag %s des Monats";
   }
+  onDayX0OfTheMonth() {
+    return "an Tag %s des Monats";
+  }
+  commaOnDayX0() {
+    return ", an Tag %s";
+  }
+  onDayX0() {
+    return "Tag %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", an Tag %s eines jeden Monats";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "%s eines jeden Monats";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", am Tag %s alle %t Monate";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s alle %t Monate";
+  }
   commaEveryX0Years() {
     return ", alle %s Jahre";
+  }
+  everyX0Years() {
+    return "alle %s Jahre";
   }
   commaStartingX0() {
     return ", beginnend %s";

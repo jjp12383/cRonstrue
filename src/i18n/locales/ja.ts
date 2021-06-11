@@ -58,11 +58,20 @@ export class ja implements Locale {
   commaEveryDay(): string {
     return "、毎日";
   }
+  everyDay(): string {
+    return "毎日";
+  }
   commaEveryX0DaysOfTheWeek(): string {
     return "、週のうち %s 日ごと";
   }
+  everyX0DaysOfTheWeek(): string {
+    return "週のうち %s 日ごと";
+  }
   commaX0ThroughX1(): string {
     return "、%s から %s まで";
+  }
+  x0ThroughX1(): string {
+    return "%s から %s まで";
   }
   first(): string {
     return "1 番目";
@@ -82,6 +91,9 @@ export class ja implements Locale {
   commaOnThe(): string {
     return "次に";
   }
+  onThe(): string {
+    return "次に";
+  }
   spaceX0OfTheMonth(): string {
     return "月のうち %s";
   }
@@ -94,14 +106,32 @@ export class ja implements Locale {
   commaEveryX0Months(): string {
     return "、%s か月ごと";
   }
+  everyX0Months(): string {
+    return "%s か月ごと";
+  }
+  commaEveryMonth(): string {
+    return "、毎月";
+  }
+  everyMonth(): string {
+    return "毎月";
+  }
   commaOnlyInX0(): string {
+    return "%s でのみ";
+  }
+  onlyInX0(): string {
     return "%s でのみ";
   }
   commaOnTheLastDayOfTheMonth(): string {
     return "次の最終日に";
   }
+  lastDayOfTheMonth(): string {
+    return "次の最終日に";
+  }
   commaOnTheLastWeekdayOfTheMonth(): string {
     return "月の最後の平日に";
+  }
+  lastWeekdayOfTheMonth(): string {
+    return "月の最後の平日";
   }
   firstWeekday(): string {
     return "最初の平日";
@@ -112,14 +142,44 @@ export class ja implements Locale {
   commaOnTheX0OfTheMonth(): string {
     return "月の %s に";
   }
+  theX0OfTheMonth() {
+    return "月の %s に";
+  }
   commaEveryX0Days(): string {
     return "、%s 日ごと";
+  }
+  everyX0Days(): string {
+    return "%s 日ごと";
   }
   commaBetweenDayX0AndX1OfTheMonth(): string {
     return "、月の %s 日から %s 日の間";
   }
+  betweenDayX0AndX1OfTheMonth(): string {
+    return "月の %s 日から %s 日の間";
+  }
   commaOnDayX0OfTheMonth(): string {
     return "、月の %s 日目";
+  }
+  onDayX0OfTheMonth(): string {
+    return "月の %s 日目";
+  }
+  commaOnDayX0() {
+    return "、%s日目";
+  }
+  onDayX0() {
+    return "%s日目";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return "、毎月 %s 日目";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "毎月 %s 日目";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return "、%s日目、%tか月ごと";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s日目、%tか月ごと";
   }
   spaceAndSpace(): string {
     return "と";
@@ -133,6 +193,9 @@ export class ja implements Locale {
   commaEveryX0Years(): string {
     return "、%s 年ごと";
   }
+  everyX0Years(): string {
+    return "%s 年ごと";
+  }
   commaStartingX0(): string {
     return "、%s に開始";
   }
@@ -145,6 +208,9 @@ export class ja implements Locale {
   commaDaysBeforeTheLastDayOfTheMonth(): string {
     return "月の最終日の %s 日前";
   }
+  daysBeforeTheLastDayOfTheMonth(): string {
+    return "月の最終日の %s 日前";
+  }
   atX0SecondsPastTheMinuteGt20(): string {
     return null;
   }
@@ -154,7 +220,13 @@ export class ja implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  yearX0ThroughYearX1(): string {
     return null;
   }
   lastDay() {

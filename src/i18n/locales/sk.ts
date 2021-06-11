@@ -11,10 +11,15 @@ export class sk implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
     return null;
   }
-
+  yearX0ThroughYearX1(): string {
+    return null;
+  }
   use24HourTimeFormatByDefault() {
     return true;
   }
@@ -73,11 +78,20 @@ export class sk implements Locale {
   commaEveryDay() {
     return ", každý deň";
   }
+  everyDay() {
+    return "každý deň";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", každých %s dní v týždni";
   }
+  everyX0DaysOfTheWeek() {
+    return "každých %s dní v týždni";
+  }
   commaX0ThroughX1() {
     return ", od %s do %s";
+  }
+  x0ThroughX1() {
+    return "od %s do %s";
   }
   first() {
     return "prvý";
@@ -97,6 +111,9 @@ export class sk implements Locale {
   commaOnThe() {
     return ", ";
   }
+  onThe() {
+    return " ";
+  }
   spaceX0OfTheMonth() {
     return " %s v mesiaci";
   }
@@ -115,17 +132,38 @@ export class sk implements Locale {
   commaEveryX0Months() {
     return ", každých %s mesiacov";
   }
+  everyX0Months() {
+    return "každých %s mesiacov";
+  }
+  commaEveryMonth(): string {
+    return ", každý mesiac";
+  }
+  everyMonth(): string {
+    return "každý mesiac";
+  }
   commaOnlyInX0() {
     return ", iba v %s";
+  }
+  onlyInX0() {
+    return "iba v %s";
   }
   commaOnTheLastDayOfTheMonth() {
     return ", posledný deň v mesiaci";
   }
+  lastDayOfTheMonth() {
+    return "posledný deň v mesiaci"
+  }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", posledný pracovný deň v mesiaci";
   }
+  lastWeekdayOfTheMonth() {
+    return "posledný pracovný deň v mesiaci";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s dní pred posledným dňom v mesiaci";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s dní pred posledným dňom v mesiaci";
   }
   firstWeekday() {
     return "prvý pracovný deň";
@@ -136,17 +174,50 @@ export class sk implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", v %s v mesiaci";
   }
+  theX0OfTheMonth() {
+    return "%s v mesiaci";
+  }
   commaEveryX0Days() {
     return ", každých %s dní";
+  }
+  everyX0Days() {
+    return "každých %s dní";
   }
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", medzi dňami %s a %s v mesiaci";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "medzi dňami %s a %s v mesiaci";
+  }
   commaOnDayX0OfTheMonth() {
     return ", %s. deň v mesiaci";
   }
+  onDayX0OfTheMonth() {
+    return "%s. deň v mesiaci";
+  }
+  commaOnDayX0() {
+    return ", v deň %s";
+  }
+  onDayX0() {
+    return "deň %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", %s. deň každého mesiaca";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "deň %s každého mesiaca";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", %s. deň, každých %t mesiacov";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "deň %s, každých %t mesiacov";
+  }
   commaEveryX0Years() {
     return ", každých %s rokov";
+  }
+  everyX0Years() {
+    return "každých %s rokov";
   }
   commaStartingX0() {
     return ", začínajúcich %s";

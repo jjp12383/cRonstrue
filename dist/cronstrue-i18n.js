@@ -121,16 +121,30 @@ var ExpressionDescriptor = (function () {
         }
     }
     ExpressionDescriptor.toString = function (expression, _a) {
-        var _b = _a === void 0 ? {} : _a, _c = _b.throwExceptionOnParseError, throwExceptionOnParseError = _c === void 0 ? true : _c, _d = _b.verbose, verbose = _d === void 0 ? false : _d, _e = _b.dayOfWeekStartIndexZero, dayOfWeekStartIndexZero = _e === void 0 ? true : _e, use24HourTimeFormat = _b.use24HourTimeFormat, _f = _b.locale, locale = _f === void 0 ? "en" : _f;
+        var _b = _a === void 0 ? {} : _a, _c = _b.throwExceptionOnParseError, throwExceptionOnParseError = _c === void 0 ? true : _c, _d = _b.verbose, verbose = _d === void 0 ? false : _d, _e = _b.dayOfWeekStartIndexZero, dayOfWeekStartIndexZero = _e === void 0 ? true : _e, use24HourTimeFormat = _b.use24HourTimeFormat, _f = _b.locale, locale = _f === void 0 ? "en" : _f, _g = _b.modulos, modulos = _g === void 0 ? { dayModulo: 0, weekModulo: 0, monthModulo: 0 } : _g;
         var options = {
             throwExceptionOnParseError: throwExceptionOnParseError,
             verbose: verbose,
             dayOfWeekStartIndexZero: dayOfWeekStartIndexZero,
             use24HourTimeFormat: use24HourTimeFormat,
             locale: locale,
+            modulos: modulos,
         };
         var descripter = new ExpressionDescriptor(expression, options);
         return descripter.getFullDescription();
+    };
+    ExpressionDescriptor.toObject = function (expression, _a) {
+        var _b = _a === void 0 ? {} : _a, _c = _b.throwExceptionOnParseError, throwExceptionOnParseError = _c === void 0 ? true : _c, _d = _b.verbose, verbose = _d === void 0 ? false : _d, _e = _b.dayOfWeekStartIndexZero, dayOfWeekStartIndexZero = _e === void 0 ? true : _e, use24HourTimeFormat = _b.use24HourTimeFormat, _f = _b.locale, locale = _f === void 0 ? "en" : _f, _g = _b.modulos, modulos = _g === void 0 ? { dayModulo: 0, weekModulo: 0, monthModulo: 0 } : _g;
+        var options = {
+            throwExceptionOnParseError: throwExceptionOnParseError,
+            verbose: verbose,
+            dayOfWeekStartIndexZero: dayOfWeekStartIndexZero,
+            use24HourTimeFormat: use24HourTimeFormat,
+            locale: locale,
+            modulos: modulos,
+        };
+        var descripter = new ExpressionDescriptor(expression, options);
+        return descripter.getPartsOfDescription();
     };
     ExpressionDescriptor.initialize = function (localesLoader) {
         ExpressionDescriptor.specialCharacters = ["/", "-", ",", "*"];
@@ -141,12 +155,12 @@ var ExpressionDescriptor = (function () {
         try {
             var parser = new cronParser_1.CronParser(this.expression, this.options.dayOfWeekStartIndexZero);
             this.expressionParts = parser.parse();
-            var timeSegment = this.getTimeOfDayDescription();
-            var dayOfMonthDesc = this.getDayOfMonthDescription();
-            var monthDesc = this.getMonthDescription();
-            var dayOfWeekDesc = this.getDayOfWeekDescription();
-            var yearDesc = this.getYearDescription();
-            description += timeSegment + dayOfMonthDesc + dayOfWeekDesc + monthDesc + yearDesc;
+            var timeSegment = this.getTimeOfDayDescription(false);
+            var dayOfMonthDesc = this.getDayOfMonthDescription(false);
+            var monthDesc = this.getMonthDescription(false);
+            var dayOfWeekDesc = this.getDayOfWeekDescription(false);
+            var yearDesc = this.getYearDescription(false);
+            description += timeSegment + dayOfMonthDesc.description + dayOfWeekDesc.description + monthDesc.description + yearDesc;
             description = this.transformVerbosity(description, this.options.verbose);
             description = description.charAt(0).toLocaleUpperCase() + description.substr(1);
         }
@@ -160,7 +174,56 @@ var ExpressionDescriptor = (function () {
         }
         return description;
     };
-    ExpressionDescriptor.prototype.getTimeOfDayDescription = function () {
+    ExpressionDescriptor.prototype.getPartsOfDescription = function () {
+        var description = {};
+        try {
+            var parser = new cronParser_1.CronParser(this.expression, this.options.dayOfWeekStartIndexZero);
+            this.expressionParts = parser.parse();
+            var timeSegment = this.getTimeOfDayDescription(true);
+            var dayOfMonthDesc = this.getDayOfMonthDescription(true);
+            var monthDesc = this.getMonthDescription(true);
+            var dayOfWeekDesc = this.getDayOfWeekDescription(true);
+            var yearDesc = this.getYearDescription(true);
+            var byValue = void 0;
+            var label = void 0;
+            if (dayOfWeekDesc.data && dayOfWeekDesc.data.day) {
+                byValue = 'byDay';
+                label = dayOfWeekDesc.description + " " + monthDesc.description;
+            }
+            else if (dayOfWeekDesc.data && dayOfWeekDesc.data.days) {
+                byValue = 'byWeek';
+                label = dayOfWeekDesc.description + " " + monthDesc.description;
+            }
+            else if (dayOfMonthDesc.data && dayOfMonthDesc.data.days) {
+                byValue = 'byDate';
+                label = dayOfMonthDesc.description + " " + monthDesc.description;
+            }
+            else if (dayOfMonthDesc.data && dayOfMonthDesc.data.occurs) {
+                byValue = 'byDays';
+                label = "" + dayOfMonthDesc.description;
+            }
+            description = {
+                cronLine: this.expression,
+                time: timeSegment,
+                dayOfMonth: dayOfMonthDesc,
+                month: monthDesc,
+                dayOfWeek: dayOfWeekDesc,
+                year: yearDesc,
+                byValue: byValue,
+                label: label,
+            };
+        }
+        catch (ex) {
+            if (!this.options.throwExceptionOnParseError) {
+                description = this.i18n.anErrorOccuredWhenGeneratingTheExpressionD();
+            }
+            else {
+                throw "" + ex;
+            }
+        }
+        return description;
+    };
+    ExpressionDescriptor.prototype.getTimeOfDayDescription = function (skipGrammar) {
         var secondsExpression = this.expressionParts[0];
         var minuteExpression = this.expressionParts[1];
         var hourExpression = this.expressionParts[2];
@@ -168,7 +231,12 @@ var ExpressionDescriptor = (function () {
         if (!stringUtilities_1.StringUtilities.containsAny(minuteExpression, ExpressionDescriptor.specialCharacters) &&
             !stringUtilities_1.StringUtilities.containsAny(hourExpression, ExpressionDescriptor.specialCharacters) &&
             !stringUtilities_1.StringUtilities.containsAny(secondsExpression, ExpressionDescriptor.specialCharacters)) {
-            description += this.i18n.atSpace() + this.formatTime(hourExpression, minuteExpression, secondsExpression);
+            if (skipGrammar) {
+                description += this.formatTime(hourExpression, minuteExpression, secondsExpression);
+            }
+            else {
+                description += this.i18n.atSpace() + this.formatTime(hourExpression, minuteExpression, secondsExpression);
+            }
         }
         else if (!secondsExpression &&
             minuteExpression.indexOf("-") > -1 &&
@@ -184,7 +252,9 @@ var ExpressionDescriptor = (function () {
             hourExpression.indexOf("/") == -1 &&
             !stringUtilities_1.StringUtilities.containsAny(minuteExpression, ExpressionDescriptor.specialCharacters)) {
             var hourParts = hourExpression.split(",");
-            description += this.i18n.at();
+            if (!skipGrammar) {
+                description += this.i18n.at();
+            }
             for (var i = 0; i < hourParts.length; i++) {
                 description += " ";
                 description += this.formatTime(hourParts[i], minuteExpression, "");
@@ -270,15 +340,16 @@ var ExpressionDescriptor = (function () {
         });
         return description;
     };
-    ExpressionDescriptor.prototype.getDayOfWeekDescription = function () {
+    ExpressionDescriptor.prototype.getDayOfWeekDescription = function (skipGrammar) {
         var _this = this;
         var daysOfWeekNames = this.i18n.daysOfTheWeek();
+        var data = null;
         var description = null;
         if (this.expressionParts[5] == "*") {
             description = "";
         }
         else {
-            description = this.getSegmentDescription(this.expressionParts[5], this.i18n.commaEveryDay(), function (s) {
+            description = this.getSegmentDescription(this.expressionParts[5], skipGrammar ? this.i18n.everyDay() : this.i18n.commaEveryDay(), function (s) {
                 var exp = s;
                 if (s.indexOf("#") > -1) {
                     exp = s.substr(0, s.indexOf("#"));
@@ -292,14 +363,21 @@ var ExpressionDescriptor = (function () {
                     return "";
                 }
                 else {
+                    if (skipGrammar) {
+                        return stringUtilities_1.StringUtilities.format(_this.i18n.everyX0DaysOfTheWeek(), s);
+                    }
                     return stringUtilities_1.StringUtilities.format(_this.i18n.commaEveryX0DaysOfTheWeek(), s);
                 }
             }, function (s) {
+                if (skipGrammar) {
+                    return _this.i18n.x0ThroughX1();
+                }
                 return _this.i18n.commaX0ThroughX1();
             }, function (s) {
                 var format = null;
                 if (s.indexOf("#") > -1) {
                     var dayOfWeekOfMonthNumber = s.substring(s.indexOf("#") + 1);
+                    var dayOfWeekNumber = s.substring(0, s.indexOf("#"));
                     var dayOfWeekOfMonthDescription = null;
                     switch (dayOfWeekOfMonthNumber) {
                         case "1":
@@ -318,50 +396,124 @@ var ExpressionDescriptor = (function () {
                             dayOfWeekOfMonthDescription = _this.i18n.fifth();
                             break;
                     }
-                    format = _this.i18n.commaOnThe() + dayOfWeekOfMonthDescription + _this.i18n.spaceX0OfTheMonth();
+                    data = {
+                        day: daysOfWeekNames[parseInt(dayOfWeekNumber)],
+                        occurs: dayOfWeekOfMonthDescription,
+                        daysOfWeek: daysOfWeekNames,
+                        occurOptions: [_this.i18n.first(), _this.i18n.second(), _this.i18n.third(), _this.i18n.fourth(), _this.i18n.fifth()],
+                    };
+                    if (skipGrammar) {
+                        format = dayOfWeekOfMonthDescription + _this.i18n.spaceX0OfTheMonth();
+                    }
+                    else {
+                        format = _this.i18n.commaOnThe() + dayOfWeekOfMonthDescription + _this.i18n.spaceX0OfTheMonth();
+                    }
                 }
                 else if (s.indexOf("L") > -1) {
-                    format = _this.i18n.commaOnTheLastX0OfTheMonth();
+                    if (skipGrammar) {
+                        format = _this.i18n.lastDayOfTheMonth();
+                    }
+                    else {
+                        format = _this.i18n.commaOnTheLastX0OfTheMonth();
+                    }
                 }
                 else {
                     var domSpecified = _this.expressionParts[3] != "*";
-                    format = domSpecified ? _this.i18n.commaAndOnX0() : _this.i18n.commaOnlyOnX0();
+                    var dayInts = s.split(',');
+                    data = {
+                        daysOfWeek: daysOfWeekNames,
+                        textDays: dayInts.map(function (dayInt) { return daysOfWeekNames[parseInt(dayInt)]; }),
+                        days: dayInts,
+                        occurs: _this.options.modulos.weekModulo.toString() || "1"
+                    };
+                    if (skipGrammar) {
+                        format = domSpecified ? '%s' : '%s';
+                    }
+                    else {
+                        format = domSpecified ? _this.i18n.commaAndOnX0() : _this.i18n.commaOnlyOnX0();
+                    }
                 }
                 return format;
             });
         }
-        return description;
+        return {
+            description: description,
+            data: data,
+        };
     };
-    ExpressionDescriptor.prototype.getMonthDescription = function () {
+    ExpressionDescriptor.prototype.getMonthDescription = function (skipGrammar) {
         var _this = this;
         var monthNames = this.i18n.monthsOfTheYear();
-        var description = this.getSegmentDescription(this.expressionParts[4], "", function (s) {
+        var data = null;
+        var expression = this.expressionParts[4];
+        if (this.options.modulos.monthModulo) {
+            expression = "*/" + this.options.modulos.monthModulo;
+        }
+        if (expression.indexOf('*') === -1 && expression.indexOf('?') === -1) {
+            var monthInts = expression.split(',');
+            data = {
+                months: monthInts.map(function (monthInt) { return monthNames[parseInt(monthInt) - 1]; })
+            };
+        }
+        var description = this.getSegmentDescription(expression, skipGrammar ? this.i18n.everyMonth() : this.i18n.commaEveryMonth(), function (s) {
             return monthNames[parseInt(s) - 1];
         }, function (s) {
-            if (parseInt(s) == 1) {
-                return "";
+            data = {
+                occurs: s,
+            };
+            if (parseInt(s) === 1) {
+                if (skipGrammar) {
+                    return stringUtilities_1.StringUtilities.format(_this.i18n.everyMonth(), s);
+                }
+                return stringUtilities_1.StringUtilities.format(_this.i18n.commaEveryMonth(), s);
             }
             else {
+                if (skipGrammar) {
+                    return stringUtilities_1.StringUtilities.format(_this.i18n.everyX0Months(), s);
+                }
                 return stringUtilities_1.StringUtilities.format(_this.i18n.commaEveryX0Months(), s);
             }
         }, function (s) {
+            if (skipGrammar) {
+                return _this.i18n.monthX0ThroughMonthX1() || _this.i18n.x0ThroughX1();
+            }
             return _this.i18n.commaMonthX0ThroughMonthX1() || _this.i18n.commaX0ThroughX1();
         }, function (s) {
+            if (skipGrammar) {
+                return _this.i18n.onlyInMonthX0 ? _this.i18n.onlyInMonthX0() : _this.i18n.onlyInX0();
+            }
             return _this.i18n.commaOnlyInMonthX0 ? _this.i18n.commaOnlyInMonthX0() : _this.i18n.commaOnlyInX0();
         });
-        return description;
+        return {
+            description: description,
+            data: data,
+        };
     };
-    ExpressionDescriptor.prototype.getDayOfMonthDescription = function () {
+    ExpressionDescriptor.prototype.getDayOfMonthDescription = function (skipGrammar) {
         var _this = this;
         var description = null;
+        var data = null;
         var expression = this.expressionParts[3];
+        if (this.options.modulos.dayModulo) {
+            expression = "*/" + this.options.modulos.dayModulo;
+        }
         switch (expression) {
             case "L":
-                description = this.i18n.commaOnTheLastDayOfTheMonth();
+                if (skipGrammar) {
+                    description = this.i18n.lastDayOfTheMonth();
+                }
+                else {
+                    description = this.i18n.commaOnTheLastDayOfTheMonth();
+                }
                 break;
             case "WL":
             case "LW":
-                description = this.i18n.commaOnTheLastWeekdayOfTheMonth();
+                if (skipGrammar) {
+                    description = this.i18n.lastWeekdayOfTheMonth();
+                }
+                else {
+                    description = this.i18n.commaOnTheLastWeekdayOfTheMonth();
+                }
                 break;
             default:
                 var weekDayNumberMatches = expression.match(/(\d{1,2}W)|(W\d{1,2})/);
@@ -370,48 +522,92 @@ var ExpressionDescriptor = (function () {
                     var dayString = dayNumber == 1
                         ? this.i18n.firstWeekday()
                         : stringUtilities_1.StringUtilities.format(this.i18n.weekdayNearestDayX0(), dayNumber.toString());
-                    description = stringUtilities_1.StringUtilities.format(this.i18n.commaOnTheX0OfTheMonth(), dayString);
+                    if (skipGrammar) {
+                        description = stringUtilities_1.StringUtilities.format(this.i18n.theX0OfTheMonth(), dayString);
+                    }
+                    else {
+                        description = stringUtilities_1.StringUtilities.format(this.i18n.commaOnTheX0OfTheMonth(), dayString);
+                    }
                     break;
                 }
                 else {
                     var lastDayOffSetMatches = expression.match(/L-(\d{1,2})/);
                     if (lastDayOffSetMatches) {
                         var offSetDays = lastDayOffSetMatches[1];
-                        description = stringUtilities_1.StringUtilities.format(this.i18n.commaDaysBeforeTheLastDayOfTheMonth(), offSetDays);
+                        if (skipGrammar) {
+                            description = stringUtilities_1.StringUtilities.format(this.i18n.daysBeforeTheLastDayOfTheMonth(), offSetDays);
+                        }
+                        else {
+                            description = stringUtilities_1.StringUtilities.format(this.i18n.commaDaysBeforeTheLastDayOfTheMonth(), offSetDays);
+                        }
                         break;
                     }
                     else if (expression == "*" && this.expressionParts[5] != "*") {
-                        return "";
+                        return {
+                            description: "",
+                            data: null,
+                        };
                     }
                     else {
-                        description = this.getSegmentDescription(expression, this.i18n.commaEveryDay(), function (s) {
+                        if (expression.indexOf('*') === -1 && expression.indexOf('?') === -1) {
+                            if (expression.indexOf(',')) {
+                                data = {
+                                    days: expression.split(',')
+                                };
+                            }
+                        }
+                        description = this.getSegmentDescription(expression, skipGrammar ? this.i18n.everyDay() : this.i18n.commaEveryDay(), function (s) {
                             return s == "L"
                                 ? _this.i18n.lastDay()
                                 : _this.i18n.dayX0
                                     ? stringUtilities_1.StringUtilities.format(_this.i18n.dayX0(), s)
                                     : s;
                         }, function (s) {
+                            data = {
+                                occurs: s,
+                            };
+                            if (skipGrammar) {
+                                return s == "1" ? _this.i18n.everyDay() : _this.i18n.everyX0Days();
+                            }
                             return s == "1" ? _this.i18n.commaEveryDay() : _this.i18n.commaEveryX0Days();
                         }, function (s) {
+                            if (skipGrammar) {
+                                return _this.i18n.betweenDayX0AndX1OfTheMonth();
+                            }
                             return _this.i18n.commaBetweenDayX0AndX1OfTheMonth();
                         }, function (s) {
-                            return _this.i18n.commaOnDayX0OfTheMonth();
+                            if (skipGrammar) {
+                                return _this.i18n.onDayX0();
+                            }
+                            return _this.i18n.commaOnDayX0();
                         });
                     }
                     break;
                 }
         }
-        return description;
+        return {
+            description: description,
+            data: data,
+        };
     };
-    ExpressionDescriptor.prototype.getYearDescription = function () {
+    ExpressionDescriptor.prototype.getYearDescription = function (skipGrammar) {
         var _this = this;
         var description = this.getSegmentDescription(this.expressionParts[6], "", function (s) {
             return /^\d+$/.test(s) ? new Date(parseInt(s), 1).getFullYear().toString() : s;
         }, function (s) {
+            if (skipGrammar) {
+                return stringUtilities_1.StringUtilities.format(_this.i18n.everyX0Years(), s);
+            }
             return stringUtilities_1.StringUtilities.format(_this.i18n.commaEveryX0Years(), s);
         }, function (s) {
+            if (skipGrammar) {
+                return _this.i18n.yearX0ThroughYearX1() || _this.i18n.x0ThroughX1();
+            }
             return _this.i18n.commaYearX0ThroughYearX1() || _this.i18n.commaX0ThroughX1();
         }, function (s) {
+            if (skipGrammar) {
+                return _this.i18n.onlyInYearX0() ? _this.i18n.onlyInYearX0() : _this.i18n.onlyInX0();
+            }
             return _this.i18n.commaOnlyInYearX0 ? _this.i18n.commaOnlyInYearX0() : _this.i18n.commaOnlyInX0();
         });
         return description;
@@ -846,7 +1042,13 @@ var en = (function () {
     en.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    en.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     en.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    en.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     en.prototype.use24HourTimeFormatByDefault = function () {
@@ -906,11 +1108,20 @@ var en = (function () {
     en.prototype.commaEveryDay = function () {
         return ", every day";
     };
+    en.prototype.everyDay = function () {
+        return "every day";
+    };
     en.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", every %s days of the week";
     };
+    en.prototype.everyX0DaysOfTheWeek = function () {
+        return "every %s days of the week";
+    };
     en.prototype.commaX0ThroughX1 = function () {
         return ", %s through %s";
+    };
+    en.prototype.x0ThroughX1 = function () {
+        return "%s through %s";
     };
     en.prototype.first = function () {
         return "first";
@@ -930,8 +1141,11 @@ var en = (function () {
     en.prototype.commaOnThe = function () {
         return ", on the ";
     };
+    en.prototype.onThe = function () {
+        return "on the ";
+    };
     en.prototype.spaceX0OfTheMonth = function () {
-        return " %s of the month";
+        return " %s";
     };
     en.prototype.lastDay = function () {
         return "the last day";
@@ -948,17 +1162,38 @@ var en = (function () {
     en.prototype.commaEveryX0Months = function () {
         return ", every %s months";
     };
+    en.prototype.everyX0Months = function () {
+        return "every %s months";
+    };
+    en.prototype.commaEveryMonth = function () {
+        return ", every month";
+    };
+    en.prototype.everyMonth = function () {
+        return "every month";
+    };
     en.prototype.commaOnlyInX0 = function () {
         return ", only in %s";
+    };
+    en.prototype.onlyInX0 = function () {
+        return "only in %s";
     };
     en.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", on the last day of the month";
     };
+    en.prototype.lastDayOfTheMonth = function () {
+        return "last day of the month";
+    };
     en.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", on the last weekday of the month";
     };
+    en.prototype.lastWeekdayOfTheMonth = function () {
+        return "the last weekday of the month";
+    };
     en.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s days before the last day of the month";
+    };
+    en.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s days before the last day of the month";
     };
     en.prototype.firstWeekday = function () {
         return "first weekday";
@@ -969,20 +1204,53 @@ var en = (function () {
     en.prototype.commaOnTheX0OfTheMonth = function () {
         return ", on the %s of the month";
     };
+    en.prototype.theX0OfTheMonth = function () {
+        return "the %s of the month";
+    };
     en.prototype.commaEveryX0Days = function () {
         return ", every %s days";
+    };
+    en.prototype.everyX0Days = function () {
+        return "every %s days";
     };
     en.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", between day %s and %s of the month";
     };
+    en.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "between day %s and %s of the month";
+    };
     en.prototype.commaOnDayX0OfTheMonth = function () {
         return ", on day %s of the month";
+    };
+    en.prototype.onDayX0OfTheMonth = function () {
+        return "%s of the month";
+    };
+    en.prototype.commaOnDayX0 = function () {
+        return ", on day %s";
+    };
+    en.prototype.onDayX0 = function () {
+        return "day %s";
+    };
+    en.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", on day %s of every month";
+    };
+    en.prototype.onDayX0OfEveryMonth = function () {
+        return "%s of every month";
+    };
+    en.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", on day %s, every %t months";
+    };
+    en.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s, every %t months";
     };
     en.prototype.commaEveryHour = function () {
         return ", every hour";
     };
     en.prototype.commaEveryX0Years = function () {
         return ", every %s years";
+    };
+    en.prototype.everyX0Years = function () {
+        return "every %s years";
     };
     en.prototype.commaStartingX0 = function () {
         return ", starting %s";
@@ -1154,26 +1422,74 @@ var da = (function () {
     da.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", mellem dag %s og %s i måneden";
     };
+    da.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "mellem dag %s og %s i måneden";
+    };
     da.prototype.commaEveryDay = function () {
         return ", hver dag";
+    };
+    da.prototype.everyDay = function () {
+        return "hver dag";
     };
     da.prototype.commaEveryX0Days = function () {
         return ", hver %s. dag";
     };
+    da.prototype.everyX0Days = function () {
+        return "hver %s. dag";
+    };
     da.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", hver %s. ugedag";
+    };
+    da.prototype.everyX0DaysOfTheWeek = function () {
+        return "hver %s. ugedag";
     };
     da.prototype.commaEveryX0Months = function () {
         return ", hver %s. måned";
     };
+    da.prototype.everyX0Months = function () {
+        return "hver %s. måned";
+    };
+    da.prototype.commaEveryMonth = function () {
+        return ", hver måneden";
+    };
+    da.prototype.everyMonth = function () {
+        return "hver måneden";
+    };
     da.prototype.commaEveryX0Years = function () {
         return ", hvert %s. år";
+    };
+    da.prototype.everyX0Years = function () {
+        return "hvert %s. år";
     };
     da.prototype.commaOnDayX0OfTheMonth = function () {
         return ", på dag %s i måneden";
     };
+    da.prototype.onDayX0OfTheMonth = function () {
+        return "på dag %s i måneden";
+    };
+    da.prototype.commaOnDayX0 = function () {
+        return ", på dag %s";
+    };
+    da.prototype.onDayX0 = function () {
+        return "dag %s";
+    };
+    da.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", på dag %s i hver måned";
+    };
+    da.prototype.onDayX0OfEveryMonth = function () {
+        return "%s av hver måned";
+    };
+    da.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", på dag %s, hver %t måned";
+    };
+    da.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s, hver %t måned";
+    };
     da.prototype.commaOnlyInX0 = function () {
         return ", kun i %s";
+    };
+    da.prototype.onlyInX0 = function () {
+        return "kun i %s";
     };
     da.prototype.commaOnlyOnX0 = function () {
         return ", kun på %s";
@@ -1184,14 +1500,26 @@ var da = (function () {
     da.prototype.commaOnThe = function () {
         return ", på den ";
     };
+    da.prototype.onThe = function () {
+        return "på den ";
+    };
     da.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", på den sidste dag i måneden";
+    };
+    da.prototype.lastDayOfTheMonth = function () {
+        return "sidste dag i måneden";
     };
     da.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", på den sidste hverdag i måneden";
     };
+    da.prototype.lastWeekdayOfTheMonth = function () {
+        return "den sidste hverdag i måneden";
+    };
     da.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dage før den sidste dag i måneden";
+    };
+    da.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dage før den sidste dag i måneden";
     };
     da.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", på den sidste %s i måneden";
@@ -1199,8 +1527,14 @@ var da = (function () {
     da.prototype.commaOnTheX0OfTheMonth = function () {
         return ", på den %s i måneden";
     };
+    da.prototype.theX0OfTheMonth = function () {
+        return "den %s i måneden";
+    };
     da.prototype.commaX0ThroughX1 = function () {
         return ", %s til og med %s";
+    };
+    da.prototype.x0ThroughX1 = function () {
+        return "%s til og med %s";
     };
     da.prototype.everyHour = function () {
         return "hver time";
@@ -1262,7 +1596,13 @@ var da = (function () {
     da.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    da.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     da.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    da.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     da.prototype.atX0MinutesPastTheHourGt20 = function () {
@@ -1318,7 +1658,13 @@ var de = (function () {
     de.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    de.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     de.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    de.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     de.prototype.use24HourTimeFormatByDefault = function () {
@@ -1378,11 +1724,20 @@ var de = (function () {
     de.prototype.commaEveryDay = function () {
         return ", jeden Tag";
     };
+    de.prototype.everyDay = function () {
+        return "jeden Tag";
+    };
     de.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", alle %s Tage der Woche";
     };
+    de.prototype.everyX0DaysOfTheWeek = function () {
+        return "alle %s Tage der Woche";
+    };
     de.prototype.commaX0ThroughX1 = function () {
         return ", %s bis %s";
+    };
+    de.prototype.x0ThroughX1 = function () {
+        return "%s bis %s";
     };
     de.prototype.first = function () {
         return "ersten";
@@ -1402,6 +1757,9 @@ var de = (function () {
     de.prototype.commaOnThe = function () {
         return ", am ";
     };
+    de.prototype.onThe = function () {
+        return "am ";
+    };
     de.prototype.spaceX0OfTheMonth = function () {
         return " %s des Monats";
     };
@@ -1420,17 +1778,38 @@ var de = (function () {
     de.prototype.commaEveryX0Months = function () {
         return ", alle %s Monate";
     };
+    de.prototype.everyX0Months = function () {
+        return "alle %s Monate";
+    };
+    de.prototype.commaEveryMonth = function () {
+        return ", alle Monats";
+    };
+    de.prototype.everyMonth = function () {
+        return "alle Monats";
+    };
     de.prototype.commaOnlyInX0 = function () {
         return ", nur im %s";
+    };
+    de.prototype.onlyInX0 = function () {
+        return "nur im %s";
     };
     de.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", am letzten Tag des Monats";
     };
+    de.prototype.lastDayOfTheMonth = function () {
+        return "letzten Tag des Monats";
+    };
     de.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", am letzten Werktag des Monats";
     };
+    de.prototype.lastWeekdayOfTheMonth = function () {
+        return "letzten Werktag des Monats";
+    };
     de.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s tage vor dem letzten Tag des Monats";
+    };
+    de.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s tage vor dem letzten Tag des Monats";
     };
     de.prototype.firstWeekday = function () {
         return "ersten Werktag";
@@ -1441,17 +1820,50 @@ var de = (function () {
     de.prototype.commaOnTheX0OfTheMonth = function () {
         return ", am %s des Monats";
     };
+    de.prototype.theX0OfTheMonth = function () {
+        return "%s des Monats";
+    };
     de.prototype.commaEveryX0Days = function () {
         return ", alle %s Tage";
+    };
+    de.prototype.everyX0Days = function () {
+        return "alle %s Tage";
     };
     de.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", zwischen Tag %s und %s des Monats";
     };
+    de.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "zwischen Tag %s und %s des Monats";
+    };
     de.prototype.commaOnDayX0OfTheMonth = function () {
         return ", an Tag %s des Monats";
     };
+    de.prototype.onDayX0OfTheMonth = function () {
+        return "an Tag %s des Monats";
+    };
+    de.prototype.commaOnDayX0 = function () {
+        return ", an Tag %s";
+    };
+    de.prototype.onDayX0 = function () {
+        return "Tag %s";
+    };
+    de.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", an Tag %s eines jeden Monats";
+    };
+    de.prototype.onDayX0OfEveryMonth = function () {
+        return "%s eines jeden Monats";
+    };
+    de.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", am Tag %s alle %t Monate";
+    };
+    de.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s alle %t Monate";
+    };
     de.prototype.commaEveryX0Years = function () {
         return ", alle %s Jahre";
+    };
+    de.prototype.everyX0Years = function () {
+        return "alle %s Jahre";
     };
     de.prototype.commaStartingX0 = function () {
         return ", beginnend %s";
@@ -1500,7 +1912,13 @@ var es = (function () {
     es.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    es.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     es.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    es.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     es.prototype.use24HourTimeFormatByDefault = function () {
@@ -1530,23 +1948,68 @@ var es = (function () {
     es.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", entre los días %s y %s del mes";
     };
+    es.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "entre los días %s y %s del mes";
+    };
     es.prototype.commaEveryDay = function () {
         return ", cada día";
+    };
+    es.prototype.everyDay = function () {
+        return "cada día";
     };
     es.prototype.commaEveryX0Days = function () {
         return ", cada %s días";
     };
+    es.prototype.everyX0Days = function () {
+        return "cada %s días";
+    };
     es.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", cada %s días de la semana";
+    };
+    es.prototype.everyX0DaysOfTheWeek = function () {
+        return "cada %s días de la semana";
     };
     es.prototype.commaEveryX0Months = function () {
         return ", cada %s meses";
     };
+    es.prototype.everyX0Months = function () {
+        return "cada %s meses";
+    };
+    es.prototype.commaEveryMonth = function () {
+        return ", cada mes";
+    };
+    es.prototype.everyMonth = function () {
+        return "cada mes";
+    };
     es.prototype.commaOnDayX0OfTheMonth = function () {
         return ", el día %s del mes";
     };
+    es.prototype.onDayX0OfTheMonth = function () {
+        return "el día %s del mes";
+    };
+    es.prototype.commaOnDayX0 = function () {
+        return ", el día %s";
+    };
+    es.prototype.onDayX0 = function () {
+        return "día %s";
+    };
+    es.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", el día %s de cada mes";
+    };
+    es.prototype.onDayX0OfEveryMonth = function () {
+        return "%s de cada mes";
+    };
+    es.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", el día %s, cada %t meses";
+    };
+    es.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s, cada %t meses";
+    };
     es.prototype.commaOnlyInX0 = function () {
         return ", sólo en %s";
+    };
+    es.prototype.onlyInX0 = function () {
+        return "sólo en %s";
     };
     es.prototype.commaOnlyOnX0 = function () {
         return ", sólo el %s";
@@ -1557,14 +2020,26 @@ var es = (function () {
     es.prototype.commaOnThe = function () {
         return ", en el ";
     };
+    es.prototype.onThe = function () {
+        return "en el ";
+    };
     es.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", en el último día del mes";
+    };
+    es.prototype.lastDayOfTheMonth = function () {
+        return "el último día del mes";
     };
     es.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", en el último día de la semana del mes";
     };
+    es.prototype.lastWeekdayOfTheMonth = function () {
+        return "el último día de la semana del mes";
+    };
     es.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s días antes del último día del mes";
+    };
+    es.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s días antes del último día del mes";
     };
     es.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", en el último %s del mes";
@@ -1572,8 +2047,14 @@ var es = (function () {
     es.prototype.commaOnTheX0OfTheMonth = function () {
         return ", en el %s del mes";
     };
+    es.prototype.theX0OfTheMonth = function () {
+        return "el %s del mes";
+    };
     es.prototype.commaX0ThroughX1 = function () {
         return ", de %s a %s";
+    };
+    es.prototype.x0ThroughX1 = function () {
+        return "de %s a %s";
     };
     es.prototype.everyHour = function () {
         return "cada hora";
@@ -1635,6 +2116,9 @@ var es = (function () {
     es.prototype.commaEveryX0Years = function () {
         return ", cada %s años";
     };
+    es.prototype.everyX0Years = function () {
+        return "cada %s años";
+    };
     es.prototype.commaStartingX0 = function () {
         return ", comenzando %s";
     };
@@ -1682,7 +2166,13 @@ var fr = (function () {
     fr.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    fr.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     fr.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    fr.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     fr.prototype.use24HourTimeFormatByDefault = function () {
@@ -1742,11 +2232,20 @@ var fr = (function () {
     fr.prototype.commaEveryDay = function () {
         return ", tous les jours";
     };
+    fr.prototype.everyDay = function () {
+        return "tous les jours";
+    };
     fr.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", every %s days of the week";
     };
+    fr.prototype.everyX0DaysOfTheWeek = function () {
+        return "every %s days of the week";
+    };
     fr.prototype.commaX0ThroughX1 = function () {
         return ", de %s à %s";
+    };
+    fr.prototype.x0ThroughX1 = function () {
+        return "de %s à %s";
     };
     fr.prototype.first = function () {
         return "premier";
@@ -1766,6 +2265,9 @@ var fr = (function () {
     fr.prototype.commaOnThe = function () {
         return ", le ";
     };
+    fr.prototype.onThe = function () {
+        return "le ";
+    };
     fr.prototype.spaceX0OfTheMonth = function () {
         return " %s du mois";
     };
@@ -1784,17 +2286,38 @@ var fr = (function () {
     fr.prototype.commaEveryX0Months = function () {
         return ", tous les %s mois";
     };
+    fr.prototype.everyX0Months = function () {
+        return "tous les %s mois";
+    };
+    fr.prototype.commaEveryMonth = function () {
+        return ", chaque mois";
+    };
+    fr.prototype.everyMonth = function () {
+        return "chaque mois";
+    };
     fr.prototype.commaOnlyInX0 = function () {
         return ", uniquement en %s";
+    };
+    fr.prototype.onlyInX0 = function () {
+        return "uniquement en %s";
     };
     fr.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", le dernier jour du mois";
     };
+    fr.prototype.lastDayOfTheMonth = function () {
+        return "le dernier jour du mois";
+    };
     fr.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", le dernier jour ouvrable du mois";
     };
+    fr.prototype.lastWeekdayOfTheMonth = function () {
+        return "le dernier jour ouvrable du mois";
+    };
     fr.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s jours avant le dernier jour du mois";
+    };
+    fr.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s jours avant le dernier jour du mois";
     };
     fr.prototype.firstWeekday = function () {
         return "premier jour ouvrable";
@@ -1805,17 +2328,50 @@ var fr = (function () {
     fr.prototype.commaOnTheX0OfTheMonth = function () {
         return ", le %s du mois";
     };
+    fr.prototype.theX0OfTheMonth = function () {
+        return "le %s du mois";
+    };
     fr.prototype.commaEveryX0Days = function () {
         return ", tous les %s jours";
+    };
+    fr.prototype.everyX0Days = function () {
+        return "tous les %s jours";
     };
     fr.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", du %s au %s du mois";
     };
+    fr.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "du %s au %s du mois";
+    };
     fr.prototype.commaOnDayX0OfTheMonth = function () {
         return ", le %s du mois";
     };
+    fr.prototype.onDayX0OfTheMonth = function () {
+        return "le %s du mois";
+    };
+    fr.prototype.commaOnDayX0 = function () {
+        return ", le %s jour";
+    };
+    fr.prototype.onDayX0 = function () {
+        return "jour %s";
+    };
+    fr.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", le %s jour de chaque mois";
+    };
+    fr.prototype.onDayX0OfEveryMonth = function () {
+        return "jour %s de chaque mois";
+    };
+    fr.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", au jour %s, tous les %t mois";
+    };
+    fr.prototype.onDayX0OfEveryX0Months = function () {
+        return "jour %s, tous les %t mois";
+    };
     fr.prototype.commaEveryX0Years = function () {
         return ", tous les %s ans";
+    };
+    fr.prototype.everyX0Years = function () {
+        return "tous les %s ans";
     };
     fr.prototype.commaDaysX0ThroughX1 = function () {
         return ", du %s au %s";
@@ -1867,7 +2423,13 @@ var it = (function () {
     it.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    it.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     it.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    it.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     it.prototype.use24HourTimeFormatByDefault = function () {
@@ -1897,26 +2459,74 @@ var it = (function () {
     it.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", tra il giorno %s e %s del mese";
     };
+    it.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "tra il giorno %s e %s del mese";
+    };
     it.prototype.commaEveryDay = function () {
         return ", ogni giorno";
+    };
+    it.prototype.everyDay = function () {
+        return "ogni giorno";
     };
     it.prototype.commaEveryX0Days = function () {
         return ", ogni %s giorni";
     };
+    it.prototype.everyX0Days = function () {
+        return "ogni %s giorni";
+    };
     it.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", ogni %s giorni della settimana";
+    };
+    it.prototype.everyX0DaysOfTheWeek = function () {
+        return "ogni %s giorni della settimana";
     };
     it.prototype.commaEveryX0Months = function () {
         return ", ogni %s mesi";
     };
+    it.prototype.everyX0Months = function () {
+        return "ogni %s mesi";
+    };
+    it.prototype.commaEveryMonth = function () {
+        return ", ogni mese";
+    };
+    it.prototype.everyMonth = function () {
+        return "ogni mese";
+    };
     it.prototype.commaEveryX0Years = function () {
         return ", ogni %s anni";
+    };
+    it.prototype.everyX0Years = function () {
+        return "ogni %s anni";
     };
     it.prototype.commaOnDayX0OfTheMonth = function () {
         return ", il giorno %s del mese";
     };
+    it.prototype.onDayX0OfTheMonth = function () {
+        return "il giorno %s del mese";
+    };
+    it.prototype.commaOnDayX0 = function () {
+        return ", il giorno %s";
+    };
+    it.prototype.onDayX0 = function () {
+        return "giorno %s";
+    };
+    it.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", il giorno %s di ogni mese";
+    };
+    it.prototype.onDayX0OfEveryMonth = function () {
+        return "giorno %s di ogni mese";
+    };
+    it.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", il giorno %s, ogni %t mesi";
+    };
+    it.prototype.onDayX0OfEveryX0Months = function () {
+        return "giorno %s, ogni %t mesi";
+    };
     it.prototype.commaOnlyInX0 = function () {
         return ", solo in %s";
+    };
+    it.prototype.onlyInX0 = function () {
+        return "solo in %s";
     };
     it.prototype.commaOnlyOnX0 = function () {
         return ", solo il %s";
@@ -1927,14 +2537,26 @@ var it = (function () {
     it.prototype.commaOnThe = function () {
         return ", il ";
     };
+    it.prototype.onThe = function () {
+        return "il ";
+    };
     it.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", l'ultimo giorno del mese";
+    };
+    it.prototype.lastDayOfTheMonth = function () {
+        return "l'ultimo giorno del mese";
     };
     it.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", nell'ultima settimana del mese";
     };
+    it.prototype.lastWeekdayOfTheMonth = function () {
+        return "l'ultima settimana del mese";
+    };
     it.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s giorni prima dell'ultimo giorno del mese";
+    };
+    it.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s giorni prima dell'ultimo giorno del mese";
     };
     it.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", l'ultimo %s del mese";
@@ -1942,8 +2564,14 @@ var it = (function () {
     it.prototype.commaOnTheX0OfTheMonth = function () {
         return ", il %s del mese";
     };
+    it.prototype.theX0OfTheMonth = function () {
+        return "il %s del mese";
+    };
     it.prototype.commaX0ThroughX1 = function () {
         return ", %s al %s";
+    };
+    it.prototype.x0ThroughX1 = function () {
+        return "%s al %s";
     };
     it.prototype.everyHour = function () {
         return "ogni ora";
@@ -2058,7 +2686,13 @@ var ko = (function () {
     ko.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    ko.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     ko.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    ko.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     ko.prototype.use24HourTimeFormatByDefault = function () {
@@ -2118,11 +2752,20 @@ var ko = (function () {
     ko.prototype.commaEveryDay = function () {
         return ", 매일";
     };
+    ko.prototype.everyDay = function () {
+        return "매일";
+    };
     ko.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", 주 중 %s일마다";
     };
+    ko.prototype.everyX0DaysOfTheWeek = function () {
+        return "주 중 %s일마다";
+    };
     ko.prototype.commaX0ThroughX1 = function () {
         return ", %s에서 %s가지";
+    };
+    ko.prototype.x0ThroughX1 = function () {
+        return "%s에서 %s가지";
     };
     ko.prototype.first = function () {
         return "첫 번째";
@@ -2142,6 +2785,9 @@ var ko = (function () {
     ko.prototype.commaOnThe = function () {
         return ", 해당 ";
     };
+    ko.prototype.onThe = function () {
+        return "해당 ";
+    };
     ko.prototype.spaceX0OfTheMonth = function () {
         return " 해당 월의 %s";
     };
@@ -2160,17 +2806,38 @@ var ko = (function () {
     ko.prototype.commaEveryX0Months = function () {
         return ", %s개월마다";
     };
+    ko.prototype.everyX0Months = function () {
+        return "%s개월마다";
+    };
+    ko.prototype.commaEveryMonth = function () {
+        return ", 매 달";
+    };
+    ko.prototype.everyMonth = function () {
+        return "매 달";
+    };
     ko.prototype.commaOnlyInX0 = function () {
         return ", %s에서만";
+    };
+    ko.prototype.onlyInX0 = function () {
+        return "%s에서만";
     };
     ko.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", 해당 월의 마지막 날에";
     };
+    ko.prototype.lastDayOfTheMonth = function () {
+        return "해당 월의 마지막 날에";
+    };
     ko.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", 해당 월의 마지막 평일에";
     };
+    ko.prototype.lastWeekdayOfTheMonth = function () {
+        return "매월 마지막 평일";
+    };
     ko.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", 해당 월의 마지막 날 %s일 전";
+    };
+    ko.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "해당 월의 마지막 날 %s일 전";
     };
     ko.prototype.firstWeekday = function () {
         return "첫 번째 평일";
@@ -2181,14 +2848,44 @@ var ko = (function () {
     ko.prototype.commaOnTheX0OfTheMonth = function () {
         return ", 해당 월의 %s에";
     };
+    ko.prototype.theX0OfTheMonth = function () {
+        return "해당 월의 %s에";
+    };
     ko.prototype.commaEveryX0Days = function () {
         return ", %s일마다";
+    };
+    ko.prototype.everyX0Days = function () {
+        return "%s일마다";
     };
     ko.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", 해당 월의 %s일 및 %s일 사이";
     };
+    ko.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "해당 월의 %s일 및 %s일 사이";
+    };
     ko.prototype.commaOnDayX0OfTheMonth = function () {
         return ", 해당 월의 %s일에";
+    };
+    ko.prototype.onDayX0OfTheMonth = function () {
+        return "해당 월의 %s일에";
+    };
+    ko.prototype.commaOnDayX0 = function () {
+        return ", %s 일";
+    };
+    ko.prototype.onDayX0 = function () {
+        return "%s 일차";
+    };
+    ko.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", 매월 %s 일";
+    };
+    ko.prototype.onDayX0OfEveryMonth = function () {
+        return "매월 %s 일";
+    };
+    ko.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", %s 일차, %t 개월마다";
+    };
+    ko.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s 일차, %t 개월마다";
     };
     ko.prototype.commaEveryMinute = function () {
         return ", 1분마다";
@@ -2198,6 +2895,9 @@ var ko = (function () {
     };
     ko.prototype.commaEveryX0Years = function () {
         return ", %s년마다";
+    };
+    ko.prototype.everyX0Years = function () {
+        return "%s년마다";
     };
     ko.prototype.commaStartingX0 = function () {
         return ", %s부터";
@@ -2233,7 +2933,13 @@ var nl = (function () {
     nl.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    nl.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     nl.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    nl.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     nl.prototype.use24HourTimeFormatByDefault = function () {
@@ -2293,11 +2999,20 @@ var nl = (function () {
     nl.prototype.commaEveryDay = function () {
         return ", elke dag";
     };
+    nl.prototype.everyDay = function () {
+        return "elke dag";
+    };
     nl.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", elke %s dagen van de week";
     };
+    nl.prototype.everyX0DaysOfTheWeek = function () {
+        return "elke %s dagen van de week";
+    };
     nl.prototype.commaX0ThroughX1 = function () {
         return ", %s t/m %s";
+    };
+    nl.prototype.x0ThroughX1 = function () {
+        return "%s t/m %s";
     };
     nl.prototype.first = function () {
         return "eerste";
@@ -2317,6 +3032,9 @@ var nl = (function () {
     nl.prototype.commaOnThe = function () {
         return ", op de ";
     };
+    nl.prototype.onThe = function () {
+        return "op de ";
+    };
     nl.prototype.spaceX0OfTheMonth = function () {
         return " %s van de maand";
     };
@@ -2335,17 +3053,38 @@ var nl = (function () {
     nl.prototype.commaEveryX0Months = function () {
         return ", elke %s maanden";
     };
+    nl.prototype.everyX0Months = function () {
+        return "elke %s maanden";
+    };
+    nl.prototype.commaEveryMonth = function () {
+        return ", elke maand";
+    };
+    nl.prototype.everyMonth = function () {
+        return "elke maand";
+    };
     nl.prototype.commaOnlyInX0 = function () {
         return ", alleen in %s";
+    };
+    nl.prototype.onlyInX0 = function () {
+        return "alleen in %s";
     };
     nl.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", op de laatste dag van de maand";
     };
+    nl.prototype.lastDayOfTheMonth = function () {
+        return "de laatste dag van de maand";
+    };
     nl.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", op de laatste werkdag van de maand";
     };
+    nl.prototype.lastWeekdayOfTheMonth = function () {
+        return "de laatste werkdag van de maand";
+    };
     nl.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dagen vóór de laatste dag van de maand";
+    };
+    nl.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dagen vóór de laatste dag van de maand";
     };
     nl.prototype.firstWeekday = function () {
         return "eerste werkdag";
@@ -2356,17 +3095,50 @@ var nl = (function () {
     nl.prototype.commaOnTheX0OfTheMonth = function () {
         return ", op de %s van de maand";
     };
+    nl.prototype.theX0OfTheMonth = function () {
+        return "de %s van de maand";
+    };
     nl.prototype.commaEveryX0Days = function () {
         return ", elke %s dagen";
+    };
+    nl.prototype.everyX0Days = function () {
+        return "elke %s dagen";
     };
     nl.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", tussen dag %s en %s van de maand";
     };
+    nl.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "tussen dag %s en %s van de maand";
+    };
     nl.prototype.commaOnDayX0OfTheMonth = function () {
         return ", op dag %s van de maand";
     };
+    nl.prototype.onDayX0OfTheMonth = function () {
+        return "op dag %s van de maand";
+    };
+    nl.prototype.commaOnDayX0 = function () {
+        return ", op dag %s";
+    };
+    nl.prototype.onDayX0 = function () {
+        return "dag %s";
+    };
+    nl.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", op dag %s van elke maand";
+    };
+    nl.prototype.onDayX0OfEveryMonth = function () {
+        return "dag %s van elke maand";
+    };
+    nl.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", op dag %s, elke %t maanden";
+    };
+    nl.prototype.onDayX0OfEveryX0Months = function () {
+        return "dag %s, elke %t maanden";
+    };
     nl.prototype.commaEveryX0Years = function () {
         return ", elke %s jaren";
+    };
+    nl.prototype.everyX0Years = function () {
+        return "elke %s jaren";
     };
     nl.prototype.commaStartingX0 = function () {
         return ", beginnend %s";
@@ -2415,7 +3187,13 @@ var nb = (function () {
     nb.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    nb.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     nb.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    nb.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     nb.prototype.use24HourTimeFormatByDefault = function () {
@@ -2445,26 +3223,74 @@ var nb = (function () {
     nb.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", mellom dag %s og %s av måneden";
     };
+    nb.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "mellom dag %s og %s av måneden";
+    };
     nb.prototype.commaEveryDay = function () {
         return ", hver dag";
+    };
+    nb.prototype.everyDay = function () {
+        return "hver dag";
     };
     nb.prototype.commaEveryX0Days = function () {
         return ", hver %s dag";
     };
+    nb.prototype.everyX0Days = function () {
+        return "hver %s dag";
+    };
     nb.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", hver %s ukedag";
+    };
+    nb.prototype.everyX0DaysOfTheWeek = function () {
+        return "hver %s ukedag";
     };
     nb.prototype.commaEveryX0Months = function () {
         return ", hver %s måned";
     };
+    nb.prototype.everyX0Months = function () {
+        return "hver %s måned";
+    };
+    nb.prototype.commaEveryMonth = function () {
+        return ", hver måned";
+    };
+    nb.prototype.everyMonth = function () {
+        return "hver måned";
+    };
     nb.prototype.commaEveryX0Years = function () {
         return ", hvert %s år";
+    };
+    nb.prototype.everyX0Years = function () {
+        return "hvert %s år";
     };
     nb.prototype.commaOnDayX0OfTheMonth = function () {
         return ", på dag %s av måneden";
     };
+    nb.prototype.onDayX0OfTheMonth = function () {
+        return "på dag %s av måneden";
+    };
+    nb.prototype.commaOnDayX0 = function () {
+        return ", på dag %s";
+    };
+    nb.prototype.onDayX0 = function () {
+        return "dag %s";
+    };
+    nb.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", på dag %s i hver måned";
+    };
+    nb.prototype.onDayX0OfEveryMonth = function () {
+        return "dag %s i hver måned";
+    };
+    nb.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", på dag %s, hver %t. måned";
+    };
+    nb.prototype.onDayX0OfEveryX0Months = function () {
+        return "dag %s, hver %t. måned";
+    };
     nb.prototype.commaOnlyInX0 = function () {
         return ", bare i %s";
+    };
+    nb.prototype.onlyInX0 = function () {
+        return "bare i %s";
     };
     nb.prototype.commaOnlyOnX0 = function () {
         return ", på %s";
@@ -2475,14 +3301,26 @@ var nb = (function () {
     nb.prototype.commaOnThe = function () {
         return ", på ";
     };
+    nb.prototype.onThe = function () {
+        return "på ";
+    };
     nb.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", på den siste dagen i måneden";
+    };
+    nb.prototype.lastDayOfTheMonth = function () {
+        return "den siste dagen i måneden";
     };
     nb.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", den siste ukedagen i måneden";
     };
+    nb.prototype.lastWeekdayOfTheMonth = function () {
+        return "den siste ukedagen i måneden";
+    };
     nb.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dager før den siste dagen i måneden";
+    };
+    nb.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dager før den siste dagen i måneden";
     };
     nb.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", på den siste %s av måneden";
@@ -2490,8 +3328,14 @@ var nb = (function () {
     nb.prototype.commaOnTheX0OfTheMonth = function () {
         return ", på den %s av måneden";
     };
+    nb.prototype.theX0OfTheMonth = function () {
+        return "den %s av måneden";
+    };
     nb.prototype.commaX0ThroughX1 = function () {
         return ", %s til og med %s";
+    };
+    nb.prototype.x0ThroughX1 = function () {
+        return "%s til og med %s";
     };
     nb.prototype.everyHour = function () {
         return "hver time";
@@ -2597,7 +3441,13 @@ var sv = (function () {
     sv.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    sv.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     sv.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    sv.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     sv.prototype.use24HourTimeFormatByDefault = function () {
@@ -2657,11 +3507,20 @@ var sv = (function () {
     sv.prototype.commaEveryDay = function () {
         return ", varje dag";
     };
+    sv.prototype.everyDay = function () {
+        return "varje dag";
+    };
     sv.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", var %s dag i veckan";
     };
+    sv.prototype.everyX0DaysOfTheWeek = function () {
+        return "var %s dag i veckan";
+    };
     sv.prototype.commaX0ThroughX1 = function () {
         return ", %s till %s";
+    };
+    sv.prototype.x0ThroughX1 = function () {
+        return "%s till %s";
     };
     sv.prototype.first = function () {
         return "första";
@@ -2681,6 +3540,9 @@ var sv = (function () {
     sv.prototype.commaOnThe = function () {
         return ", den ";
     };
+    sv.prototype.onThe = function () {
+        return "den ";
+    };
     sv.prototype.spaceX0OfTheMonth = function () {
         return " %sen av månaden";
     };
@@ -2699,17 +3561,38 @@ var sv = (function () {
     sv.prototype.commaEveryX0Months = function () {
         return ", var %s månad";
     };
+    sv.prototype.everyX0Months = function () {
+        return "var %s månad";
+    };
+    sv.prototype.commaEveryMonth = function () {
+        return ", varje månad";
+    };
+    sv.prototype.everyMonth = function () {
+        return "varje månad";
+    };
     sv.prototype.commaOnlyInX0 = function () {
         return ", bara på %s";
+    };
+    sv.prototype.onlyInX0 = function () {
+        return "bara på %s";
     };
     sv.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", på sista dagen av månaden";
     };
+    sv.prototype.lastDayOfTheMonth = function () {
+        return "sista dagen av månaden";
+    };
     sv.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", på sista veckodag av månaden";
     };
+    sv.prototype.lastWeekdayOfTheMonth = function () {
+        return "sista veckodag av månaden";
+    };
     sv.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dagar före den sista dagen i månaden";
+    };
+    sv.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dagar före den sista dagen i månaden";
     };
     sv.prototype.firstWeekday = function () {
         return "första veckodag";
@@ -2720,17 +3603,50 @@ var sv = (function () {
     sv.prototype.commaOnTheX0OfTheMonth = function () {
         return ", på den %s av månaden";
     };
+    sv.prototype.theX0OfTheMonth = function () {
+        return "den %s av månaden";
+    };
     sv.prototype.commaEveryX0Days = function () {
         return ", var %s dag";
+    };
+    sv.prototype.everyX0Days = function () {
+        return "var %s dag";
     };
     sv.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", mellan dag %s och %s av månaden";
     };
+    sv.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "mellan dag %s och %s av månaden";
+    };
     sv.prototype.commaOnDayX0OfTheMonth = function () {
         return ", på dag %s av månaden";
     };
+    sv.prototype.onDayX0OfTheMonth = function () {
+        return "på dag %s av månaden";
+    };
+    sv.prototype.commaOnDayX0 = function () {
+        return ", på dag %s";
+    };
+    sv.prototype.onDayX0 = function () {
+        return "dag %s";
+    };
+    sv.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", på dag %s i varje månad";
+    };
+    sv.prototype.onDayX0OfEveryMonth = function () {
+        return "dag %s i varje månad";
+    };
+    sv.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", dag %s, var %t: e månad";
+    };
+    sv.prototype.onDayX0OfEveryX0Months = function () {
+        return "dag %s, var %t: e månad";
+    };
     sv.prototype.commaEveryX0Years = function () {
         return ", var %s år";
+    };
+    sv.prototype.everyX0Years = function () {
+        return "var %s år";
     };
     sv.prototype.commaStartingX0 = function () {
         return ", startar %s";
@@ -2779,7 +3695,13 @@ var pl = (function () {
     pl.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    pl.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     pl.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    pl.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     pl.prototype.use24HourTimeFormatByDefault = function () {
@@ -2809,26 +3731,74 @@ var pl = (function () {
     pl.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", od %s-ego do %s-ego dnia miesiąca";
     };
+    pl.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "od %s-ego do %s-ego dnia miesiąca";
+    };
     pl.prototype.commaEveryDay = function () {
         return ", co dzień";
+    };
+    pl.prototype.everyDay = function () {
+        return "co dzień";
     };
     pl.prototype.commaEveryX0Days = function () {
         return ", co %s dni";
     };
+    pl.prototype.everyX0Days = function () {
+        return "co %s dni";
+    };
     pl.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", co %s dni tygodnia";
+    };
+    pl.prototype.everyX0DaysOfTheWeek = function () {
+        return "co %s dni tygodnia";
     };
     pl.prototype.commaEveryX0Months = function () {
         return ", co %s miesięcy";
     };
+    pl.prototype.everyX0Months = function () {
+        return "co %s miesięcy";
+    };
+    pl.prototype.commaEveryMonth = function () {
+        return ", dnia miesiąca";
+    };
+    pl.prototype.everyMonth = function () {
+        return "dnia miesiąca";
+    };
     pl.prototype.commaEveryX0Years = function () {
         return ", co %s lat";
+    };
+    pl.prototype.everyX0Years = function () {
+        return "co %s lat";
     };
     pl.prototype.commaOnDayX0OfTheMonth = function () {
         return ", %s-ego dnia miesiąca";
     };
+    pl.prototype.onDayX0OfTheMonth = function () {
+        return "%s-ego dnia miesiąca";
+    };
+    pl.prototype.commaOnDayX0 = function () {
+        return ", w %s dniu";
+    };
+    pl.prototype.onDayX0 = function () {
+        return "dzień %s";
+    };
+    pl.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", %s dnia każdego miesiąca";
+    };
+    pl.prototype.onDayX0OfEveryMonth = function () {
+        return "%s dzień każdego miesiąca";
+    };
+    pl.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", w %s dniu, co %t miesięcy";
+    };
+    pl.prototype.onDayX0OfEveryX0Months = function () {
+        return "dzień %s, co %t miesięcy";
+    };
     pl.prototype.commaOnlyInX0 = function () {
         return ", tylko %s";
+    };
+    pl.prototype.onlyInX0 = function () {
+        return "tylko %s";
     };
     pl.prototype.commaOnlyOnX0 = function () {
         return ", tylko %s";
@@ -2839,14 +3809,26 @@ var pl = (function () {
     pl.prototype.commaOnThe = function () {
         return ", ";
     };
+    pl.prototype.onThe = function () {
+        return " ";
+    };
     pl.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", ostatni dzień miesiąca";
+    };
+    pl.prototype.lastDayOfTheMonth = function () {
+        return "ostatni dzień miesiąca";
     };
     pl.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", ostatni dzień roboczy miesiąca";
     };
+    pl.prototype.lastWeekdayOfTheMonth = function () {
+        return "ostatni dzień roboczy miesiąca";
+    };
     pl.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dni przed ostatnim dniem miesiąca";
+    };
+    pl.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dni przed ostatnim dniem miesiąca";
     };
     pl.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", ostatni %s miesiąca";
@@ -2854,8 +3836,14 @@ var pl = (function () {
     pl.prototype.commaOnTheX0OfTheMonth = function () {
         return ", %s miesiąca";
     };
+    pl.prototype.theX0OfTheMonth = function () {
+        return "%s miesiąca";
+    };
     pl.prototype.commaX0ThroughX1 = function () {
         return ", od %s do %s";
+    };
+    pl.prototype.x0ThroughX1 = function () {
+        return "od %s do %s";
     };
     pl.prototype.everyHour = function () {
         return "co godzinę";
@@ -2961,7 +3949,13 @@ var pt_BR = (function () {
     pt_BR.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    pt_BR.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     pt_BR.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    pt_BR.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     pt_BR.prototype.use24HourTimeFormatByDefault = function () {
@@ -2991,23 +3985,68 @@ var pt_BR = (function () {
     pt_BR.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", entre os dias %s e %s do mês";
     };
+    pt_BR.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "entre os dias %s e %s do mês";
+    };
     pt_BR.prototype.commaEveryDay = function () {
         return ", a cada dia";
+    };
+    pt_BR.prototype.everyDay = function () {
+        return "a cada dia";
     };
     pt_BR.prototype.commaEveryX0Days = function () {
         return ", a cada %s dias";
     };
+    pt_BR.prototype.everyX0Days = function () {
+        return "a cada %s dias";
+    };
     pt_BR.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", a cada %s dias de semana";
+    };
+    pt_BR.prototype.everyX0DaysOfTheWeek = function () {
+        return "a cada %s dias de semana";
     };
     pt_BR.prototype.commaEveryX0Months = function () {
         return ", a cada %s meses";
     };
+    pt_BR.prototype.everyX0Months = function () {
+        return "a cada %s meses";
+    };
+    pt_BR.prototype.commaEveryMonth = function () {
+        return ", todo mês";
+    };
+    pt_BR.prototype.everyMonth = function () {
+        return "todo mês";
+    };
     pt_BR.prototype.commaOnDayX0OfTheMonth = function () {
         return ", no dia %s do mês";
     };
+    pt_BR.prototype.onDayX0OfTheMonth = function () {
+        return "no dia %s do mês";
+    };
+    pt_BR.prototype.commaOnDayX0 = function () {
+        return ", no dia %s";
+    };
+    pt_BR.prototype.onDayX0 = function () {
+        return "dia %s";
+    };
+    pt_BR.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", no dia %s de cada mês";
+    };
+    pt_BR.prototype.onDayX0OfEveryMonth = function () {
+        return "dia %s de cada mês";
+    };
+    pt_BR.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", no dia %s, a cada %t meses";
+    };
+    pt_BR.prototype.onDayX0OfEveryX0Months = function () {
+        return "dia %s, a cada %t meses";
+    };
     pt_BR.prototype.commaOnlyInX0 = function () {
         return ", somente em %s";
+    };
+    pt_BR.prototype.onlyInX0 = function () {
+        return "somente em %s";
     };
     pt_BR.prototype.commaOnlyOnX0 = function () {
         return ", somente de %s";
@@ -3018,14 +4057,26 @@ var pt_BR = (function () {
     pt_BR.prototype.commaOnThe = function () {
         return ", na ";
     };
+    pt_BR.prototype.onThe = function () {
+        return "na ";
+    };
     pt_BR.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", no último dia do mês";
+    };
+    pt_BR.prototype.lastDayOfTheMonth = function () {
+        return "último dia do mês";
     };
     pt_BR.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", no último dia da semana do mês";
     };
+    pt_BR.prototype.lastWeekdayOfTheMonth = function () {
+        return "último dia da semana do mês";
+    };
     pt_BR.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dias antes do último dia do mês";
+    };
+    pt_BR.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dias antes do último dia do mês";
     };
     pt_BR.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", na última %s do mês";
@@ -3033,8 +4084,14 @@ var pt_BR = (function () {
     pt_BR.prototype.commaOnTheX0OfTheMonth = function () {
         return ", no %s do mês";
     };
+    pt_BR.prototype.theX0OfTheMonth = function () {
+        return "%s do mês";
+    };
     pt_BR.prototype.commaX0ThroughX1 = function () {
         return ", de %s a %s";
+    };
+    pt_BR.prototype.x0ThroughX1 = function () {
+        return "de %s a %s";
     };
     pt_BR.prototype.everyHour = function () {
         return "a cada hora";
@@ -3095,6 +4152,9 @@ var pt_BR = (function () {
     };
     pt_BR.prototype.commaEveryX0Years = function () {
         return ", a cada %s anos";
+    };
+    pt_BR.prototype.everyX0Years = function () {
+        return "a cada %s anos";
     };
     pt_BR.prototype.commaStartingX0 = function () {
         return ", iniciando %s";
@@ -3161,26 +4221,74 @@ var ro = (function () {
     ro.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", între zilele %s și %s ale lunii";
     };
+    ro.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "între zilele %s și %s ale lunii";
+    };
     ro.prototype.commaEveryDay = function () {
         return ", în fiecare zi";
+    };
+    ro.prototype.everyDay = function () {
+        return "în fiecare zi";
     };
     ro.prototype.commaEveryX0Days = function () {
         return ", la fiecare %s zile";
     };
+    ro.prototype.everyX0Days = function () {
+        return "la fiecare %s zile";
+    };
     ro.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", la fiecare a %s-a zi a săptămânii";
+    };
+    ro.prototype.everyX0DaysOfTheWeek = function () {
+        return "la fiecare a %s-a zi a săptămânii";
     };
     ro.prototype.commaEveryX0Months = function () {
         return ", la fiecare %s luni";
     };
+    ro.prototype.everyX0Months = function () {
+        return "la fiecare %s luni";
+    };
+    ro.prototype.commaEveryMonth = function () {
+        return ", in fiecare luna";
+    };
+    ro.prototype.everyMonth = function () {
+        return "in fiecare luna";
+    };
     ro.prototype.commaEveryX0Years = function () {
         return ", o dată la %s ani";
+    };
+    ro.prototype.everyX0Years = function () {
+        return "o dată la %s ani";
     };
     ro.prototype.commaOnDayX0OfTheMonth = function () {
         return ", în ziua %s a lunii";
     };
+    ro.prototype.onDayX0OfTheMonth = function () {
+        return "în ziua %s a lunii";
+    };
+    ro.prototype.commaOnDayX0 = function () {
+        return ", în ziua %s";
+    };
+    ro.prototype.onDayX0 = function () {
+        return "ziua %s";
+    };
+    ro.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", în ziua %s a fiecărei luni";
+    };
+    ro.prototype.onDayX0OfEveryMonth = function () {
+        return "ziua %s a fiecărei luni";
+    };
+    ro.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", în ziua %s, la fiecare %t luni";
+    };
+    ro.prototype.onDayX0OfEveryX0Months = function () {
+        return "ziua %s, la fiecare %t luni";
+    };
     ro.prototype.commaOnlyInX0 = function () {
         return ", doar în %s";
+    };
+    ro.prototype.onlyInX0 = function () {
+        return "doar în %s";
     };
     ro.prototype.commaOnlyOnX0 = function () {
         return ", doar %s";
@@ -3191,14 +4299,26 @@ var ro = (function () {
     ro.prototype.commaOnThe = function () {
         return ", în ";
     };
+    ro.prototype.onThe = function () {
+        return "în ";
+    };
     ro.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", în ultima zi a lunii";
+    };
+    ro.prototype.lastDayOfTheMonth = function () {
+        return "ultima zi a lunii";
     };
     ro.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", în ultima zi lucrătoare a lunii";
     };
+    ro.prototype.lastWeekdayOfTheMonth = function () {
+        return "ultima zi lucrătoare a lunii";
+    };
     ro.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s zile înainte de ultima zi a lunii";
+    };
+    ro.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s zile înainte de ultima zi a lunii";
     };
     ro.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", în ultima %s a lunii";
@@ -3206,8 +4326,14 @@ var ro = (function () {
     ro.prototype.commaOnTheX0OfTheMonth = function () {
         return ", în %s a lunii";
     };
+    ro.prototype.theX0OfTheMonth = function () {
+        return "%s a lunii";
+    };
     ro.prototype.commaX0ThroughX1 = function () {
         return ", de %s până %s";
+    };
+    ro.prototype.x0ThroughX1 = function () {
+        return "de %s până %s";
     };
     ro.prototype.everyHour = function () {
         return "în fiecare oră";
@@ -3269,8 +4395,14 @@ var ro = (function () {
     ro.prototype.commaMonthX0ThroughMonthX1 = function () {
         return ", din %s până în %s";
     };
+    ro.prototype.monthX0ThroughMonthX1 = function () {
+        return "din %s până în %s";
+    };
     ro.prototype.commaYearX0ThroughYearX1 = function () {
         return ", din %s până în %s";
+    };
+    ro.prototype.yearX0ThroughYearX1 = function () {
+        return "din %s până în %s";
     };
     ro.prototype.atX0MinutesPastTheHourGt20 = function () {
         return "la și %s de minute";
@@ -3325,7 +4457,13 @@ var ru = (function () {
     ru.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    ru.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     ru.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    ru.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     ru.prototype.use24HourTimeFormatByDefault = function () {
@@ -3385,11 +4523,20 @@ var ru = (function () {
     ru.prototype.commaEveryDay = function () {
         return ", каждый день";
     };
+    ru.prototype.everyDay = function () {
+        return "каждый день";
+    };
     ru.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", каждые %s дней недели";
     };
+    ru.prototype.everyX0DaysOfTheWeek = function () {
+        return "каждые %s дней недели";
+    };
     ru.prototype.commaX0ThroughX1 = function () {
         return ", %s по %s";
+    };
+    ru.prototype.x0ThroughX1 = function () {
+        return "%s по %s";
     };
     ru.prototype.first = function () {
         return "первый";
@@ -3409,6 +4556,9 @@ var ru = (function () {
     ru.prototype.commaOnThe = function () {
         return ", в ";
     };
+    ru.prototype.onThe = function () {
+        return "в ";
+    };
     ru.prototype.spaceX0OfTheMonth = function () {
         return " %s месяца";
     };
@@ -3427,17 +4577,38 @@ var ru = (function () {
     ru.prototype.commaEveryX0Months = function () {
         return ", каждые %s месяцев";
     };
+    ru.prototype.everyX0Months = function () {
+        return "каждые %s месяцев";
+    };
+    ru.prototype.commaEveryMonth = function () {
+        return ", каждый месяц";
+    };
+    ru.prototype.everyMonth = function () {
+        return "каждый месяц";
+    };
     ru.prototype.commaOnlyInX0 = function () {
         return ", только в %s";
+    };
+    ru.prototype.onlyInX0 = function () {
+        return "только в %s";
     };
     ru.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", в последний день месяца";
     };
+    ru.prototype.lastDayOfTheMonth = function () {
+        return "последний день месяца";
+    };
     ru.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", в последний будний день месяца";
     };
+    ru.prototype.lastWeekdayOfTheMonth = function () {
+        return "последний будний день месяца";
+    };
     ru.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s дней до последнего дня месяца";
+    };
+    ru.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s дней до последнего дня месяца";
     };
     ru.prototype.firstWeekday = function () {
         return "первый будний день";
@@ -3448,17 +4619,50 @@ var ru = (function () {
     ru.prototype.commaOnTheX0OfTheMonth = function () {
         return ", в %s месяца";
     };
+    ru.prototype.theX0OfTheMonth = function () {
+        return "в %s месяца";
+    };
     ru.prototype.commaEveryX0Days = function () {
         return ", каждые %s дней";
+    };
+    ru.prototype.everyX0Days = function () {
+        return "каждые %s дней";
     };
     ru.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", с %s по %s число месяца";
     };
+    ru.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "с %s по %s число месяца";
+    };
     ru.prototype.commaOnDayX0OfTheMonth = function () {
         return ", в %s число месяца";
     };
+    ru.prototype.onDayX0OfTheMonth = function () {
+        return "в %s число месяца";
+    };
+    ru.prototype.commaOnDayX0 = function () {
+        return ", на %s день";
+    };
+    ru.prototype.onDayX0 = function () {
+        return "день %s";
+    };
+    ru.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", в %s-й день каждого месяца";
+    };
+    ru.prototype.onDayX0OfEveryMonth = function () {
+        return "день %s каждого месяца";
+    };
+    ru.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", на %s-й день, каждые %t месяцев";
+    };
+    ru.prototype.onDayX0OfEveryX0Months = function () {
+        return "день %s, каждые %t месяцев";
+    };
     ru.prototype.commaEveryX0Years = function () {
         return ", каждые %s лет";
+    };
+    ru.prototype.everyX0Years = function () {
+        return "каждые %s лет";
     };
     ru.prototype.commaStartingX0 = function () {
         return ", начало %s";
@@ -3507,7 +4711,13 @@ var tr = (function () {
     tr.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    tr.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     tr.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    tr.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     tr.prototype.use24HourTimeFormatByDefault = function () {
@@ -3567,11 +4777,20 @@ var tr = (function () {
     tr.prototype.commaEveryDay = function () {
         return ", her gün";
     };
+    tr.prototype.everyDay = function () {
+        return "her gün";
+    };
     tr.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", ayın her %s günü";
     };
+    tr.prototype.everyX0DaysOfTheWeek = function () {
+        return "ayın her %s günü";
+    };
     tr.prototype.commaX0ThroughX1 = function () {
         return ", %s ile %s arasında";
+    };
+    tr.prototype.x0ThroughX1 = function () {
+        return "%s ile %s arasında";
     };
     tr.prototype.first = function () {
         return "ilk";
@@ -3591,6 +4810,9 @@ var tr = (function () {
     tr.prototype.commaOnThe = function () {
         return ", ayın ";
     };
+    tr.prototype.onThe = function () {
+        return "ayın ";
+    };
     tr.prototype.spaceX0OfTheMonth = function () {
         return " %s günü";
     };
@@ -3609,17 +4831,38 @@ var tr = (function () {
     tr.prototype.commaEveryX0Months = function () {
         return ", %s ayda bir";
     };
+    tr.prototype.everyX0Months = function () {
+        return "%s ayda bir";
+    };
+    tr.prototype.commaEveryMonth = function () {
+        return ", her ayr";
+    };
+    tr.prototype.everyMonth = function () {
+        return "her ay";
+    };
     tr.prototype.commaOnlyInX0 = function () {
         return ", sadece %s için";
+    };
+    tr.prototype.onlyInX0 = function () {
+        return "sadece %s için";
     };
     tr.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", ayın son günü";
     };
+    tr.prototype.lastDayOfTheMonth = function () {
+        return "ayın son günü";
+    };
     tr.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", ayın son iş günü";
     };
+    tr.prototype.lastWeekdayOfTheMonth = function () {
+        return "ayın son iş günü";
+    };
     tr.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s ayın son gününden önceki günler";
+    };
+    tr.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s ayın son gününden önceki günler";
     };
     tr.prototype.firstWeekday = function () {
         return "ilk iş günü";
@@ -3630,17 +4873,50 @@ var tr = (function () {
     tr.prototype.commaOnTheX0OfTheMonth = function () {
         return ", ayın %s";
     };
+    tr.prototype.theX0OfTheMonth = function () {
+        return "ayın %s";
+    };
     tr.prototype.commaEveryX0Days = function () {
         return ", %s günde bir";
+    };
+    tr.prototype.everyX0Days = function () {
+        return "%s günde bir";
     };
     tr.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", ayın %s. ve %s. günleri arası";
     };
+    tr.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "ayın %s. ve %s. günleri arası";
+    };
     tr.prototype.commaOnDayX0OfTheMonth = function () {
         return ", ayın %s. günü";
     };
+    tr.prototype.onDayX0OfTheMonth = function () {
+        return "ayın %s. günü";
+    };
+    tr.prototype.commaOnDayX0 = function () {
+        return ", %s. günde";
+    };
+    tr.prototype.onDayX0 = function () {
+        return "%s gün";
+    };
+    tr.prototype.commaOnDayX0OfEveryMonth = function () {
+        return "her ayın %s. gününde";
+    };
+    tr.prototype.onDayX0OfEveryMonth = function () {
+        return "her ayın %s. günü";
+    };
+    tr.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return "%s. günde %t ayda bir";
+    };
+    tr.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s. gün, her %t ayda bir";
+    };
     tr.prototype.commaEveryX0Years = function () {
         return ", %s yılda bir";
+    };
+    tr.prototype.everyX0Years = function () {
+        return "%s yılda bir";
     };
     tr.prototype.commaStartingX0 = function () {
         return ", başlangıç %s";
@@ -3689,7 +4965,13 @@ var uk = (function () {
     uk.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    uk.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     uk.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    uk.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     uk.prototype.use24HourTimeFormatByDefault = function () {
@@ -3749,11 +5031,20 @@ var uk = (function () {
     uk.prototype.commaEveryDay = function () {
         return ", щоденно";
     };
+    uk.prototype.everyDay = function () {
+        return "щоденно";
+    };
     uk.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", кожен %s день тижня";
     };
+    uk.prototype.everyX0DaysOfTheWeek = function () {
+        return "кожен %s день тижня";
+    };
     uk.prototype.commaX0ThroughX1 = function () {
         return ", %s по %s";
+    };
+    uk.prototype.x0ThroughX1 = function () {
+        return "%s по %s";
     };
     uk.prototype.first = function () {
         return "перший";
@@ -3773,6 +5064,9 @@ var uk = (function () {
     uk.prototype.commaOnThe = function () {
         return ", в ";
     };
+    uk.prototype.onThe = function () {
+        return "в ";
+    };
     uk.prototype.spaceX0OfTheMonth = function () {
         return " %s місяця";
     };
@@ -3791,17 +5085,38 @@ var uk = (function () {
     uk.prototype.commaEveryX0Months = function () {
         return ", кожен %s місяць";
     };
+    uk.prototype.everyX0Months = function () {
+        return "кожен %s місяць";
+    };
+    uk.prototype.commaEveryMonth = function () {
+        return ", щомісяця";
+    };
+    uk.prototype.everyMonth = function () {
+        return "щомісяця";
+    };
     uk.prototype.commaOnlyInX0 = function () {
         return ", тільки в %s";
+    };
+    uk.prototype.onlyInX0 = function () {
+        return "тільки в %s";
     };
     uk.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", в останній день місяця";
     };
+    uk.prototype.lastDayOfTheMonth = function () {
+        return "останній день місяця";
+    };
     uk.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", в останній будень місяця";
     };
+    uk.prototype.lastWeekdayOfTheMonth = function () {
+        return "останній будень місяця";
+    };
     uk.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s днів до останнього дня місяця";
+    };
+    uk.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s днів до останнього дня місяця";
     };
     uk.prototype.firstWeekday = function () {
         return "перший будень";
@@ -3812,17 +5127,50 @@ var uk = (function () {
     uk.prototype.commaOnTheX0OfTheMonth = function () {
         return ", в %s місяця";
     };
+    uk.prototype.theX0OfTheMonth = function () {
+        return "в %s місяця";
+    };
     uk.prototype.commaEveryX0Days = function () {
         return ", кожен %s день";
+    };
+    uk.prototype.everyX0Days = function () {
+        return "кожен %s день";
     };
     uk.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", між %s та %s днями місяця";
     };
+    uk.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "між %s та %s днями місяця";
+    };
     uk.prototype.commaOnDayX0OfTheMonth = function () {
         return ", на %s день місяця";
     };
+    uk.prototype.onDayX0OfTheMonth = function () {
+        return "на %s день місяця";
+    };
+    uk.prototype.commaOnDayX0 = function () {
+        return ", на %s день";
+    };
+    uk.prototype.onDayX0 = function () {
+        return "день %s";
+    };
+    uk.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", %s-го дня кожного місяця";
+    };
+    uk.prototype.onDayX0OfEveryMonth = function () {
+        return "день %s кожного місяця";
+    };
+    uk.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", на %s день, кожні %t місяців";
+    };
+    uk.prototype.onDayX0OfEveryX0Months = function () {
+        return "день %s, кожні %t місяців";
+    };
     uk.prototype.commaEveryX0Years = function () {
         return ", кожні %s роки";
+    };
+    uk.prototype.everyX0Years = function () {
+        return "кожні %s роки";
     };
     uk.prototype.commaStartingX0 = function () {
         return ", початок %s";
@@ -3880,8 +5228,14 @@ var zh_CN = (function () {
     zh_CN.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    zh_CN.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     zh_CN.prototype.commaYearX0ThroughYearX1 = function () {
         return ", 从%s年至%s年";
+    };
+    zh_CN.prototype.yearX0ThroughYearX1 = function () {
+        return "从%s年至%s年";
     };
     zh_CN.prototype.use24HourTimeFormatByDefault = function () {
         return false;
@@ -3940,11 +5294,20 @@ var zh_CN = (function () {
     zh_CN.prototype.commaEveryDay = function () {
         return ", 每天";
     };
+    zh_CN.prototype.everyDay = function () {
+        return "每天";
+    };
     zh_CN.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", 每周的每 %s 天";
     };
+    zh_CN.prototype.everyX0DaysOfTheWeek = function () {
+        return "每周的每 %s 天";
+    };
     zh_CN.prototype.commaX0ThroughX1 = function () {
         return ", %s至%s";
+    };
+    zh_CN.prototype.x0ThroughX1 = function () {
+        return "%s至%s";
     };
     zh_CN.prototype.first = function () {
         return "第一个";
@@ -3964,6 +5327,9 @@ var zh_CN = (function () {
     zh_CN.prototype.commaOnThe = function () {
         return ", 限每月的";
     };
+    zh_CN.prototype.onThe = function () {
+        return "限每月的";
+    };
     zh_CN.prototype.spaceX0OfTheMonth = function () {
         return "%s";
     };
@@ -3982,23 +5348,50 @@ var zh_CN = (function () {
     zh_CN.prototype.commaEveryX0Months = function () {
         return ", 每隔 %s 个月";
     };
+    zh_CN.prototype.everyX0Months = function () {
+        return "每隔 %s 个月";
+    };
+    zh_CN.prototype.commaEveryMonth = function () {
+        return ", 每个月";
+    };
+    zh_CN.prototype.everyMonth = function () {
+        return "每个月";
+    };
     zh_CN.prototype.commaOnlyInX0 = function () {
         return ", 仅限%s";
+    };
+    zh_CN.prototype.onlyInX0 = function () {
+        return "仅限%s";
     };
     zh_CN.prototype.commaOnlyInMonthX0 = function () {
         return ", 仅于%s份";
     };
+    zh_CN.prototype.onlyInMonthX0 = function () {
+        return "仅于%s份";
+    };
     zh_CN.prototype.commaOnlyInYearX0 = function () {
         return ", 仅于 %s 年";
+    };
+    zh_CN.prototype.onlyInYearX0 = function () {
+        return "仅于 %s 年";
     };
     zh_CN.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", 限每月的最后一天";
     };
+    zh_CN.prototype.lastDayOfTheMonth = function () {
+        return "每月的最后一天";
+    };
     zh_CN.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", 限每月的最后一个工作日";
     };
+    zh_CN.prototype.lastWeekdayOfTheMonth = function () {
+        return "每个月的最后一个工作日";
+    };
     zh_CN.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", 限每月最后%s天";
+    };
+    zh_CN.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "限每月最后%s天";
     };
     zh_CN.prototype.firstWeekday = function () {
         return "第一个工作日";
@@ -4009,17 +5402,50 @@ var zh_CN = (function () {
     zh_CN.prototype.commaOnTheX0OfTheMonth = function () {
         return ", 限每月的%s";
     };
+    zh_CN.prototype.theX0OfTheMonth = function () {
+        return "限每月的%s";
+    };
     zh_CN.prototype.commaEveryX0Days = function () {
         return ", 每隔 %s 天";
+    };
+    zh_CN.prototype.everyX0Days = function () {
+        return "每隔 %s 天";
     };
     zh_CN.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", 限每月的 %s 至 %s 之间";
     };
+    zh_CN.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "限每月的 %s 至 %s 之间";
+    };
     zh_CN.prototype.commaOnDayX0OfTheMonth = function () {
         return ", 限每月%s";
     };
+    zh_CN.prototype.onDayX0OfTheMonth = function () {
+        return "限每月%s";
+    };
+    zh_CN.prototype.commaOnDayX0 = function () {
+        return "，第%s天";
+    };
+    zh_CN.prototype.onDayX0 = function () {
+        return "第%s天";
+    };
+    zh_CN.prototype.commaOnDayX0OfEveryMonth = function () {
+        return "，每个月的第%s天";
+    };
+    zh_CN.prototype.onDayX0OfEveryMonth = function () {
+        return "每月的第%s天";
+    };
+    zh_CN.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return "，在第%s天，每%t个月一次";
+    };
+    zh_CN.prototype.onDayX0OfEveryX0Months = function () {
+        return "第%s天，每%t个月";
+    };
     zh_CN.prototype.commaEveryX0Years = function () {
         return ", 每隔 %s 年";
+    };
+    zh_CN.prototype.everyX0Years = function () {
+        return "每隔 %s 年";
     };
     zh_CN.prototype.commaStartingX0 = function () {
         return ", %s开始";
@@ -4058,8 +5484,14 @@ var zh_TW = (function () {
     zh_TW.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    zh_TW.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     zh_TW.prototype.commaYearX0ThroughYearX1 = function () {
         return ", 从%s年至%s年";
+    };
+    zh_TW.prototype.yearX0ThroughYearX1 = function () {
+        return "从%s年至%s年";
     };
     zh_TW.prototype.use24HourTimeFormatByDefault = function () {
         return false;
@@ -4118,11 +5550,20 @@ var zh_TW = (function () {
     zh_TW.prototype.commaEveryDay = function () {
         return ", 每天";
     };
+    zh_TW.prototype.everyDay = function () {
+        return "每天";
+    };
     zh_TW.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", 每週的每 %s 天";
     };
+    zh_TW.prototype.everyX0DaysOfTheWeek = function () {
+        return "每週的每 %s 天";
+    };
     zh_TW.prototype.commaX0ThroughX1 = function () {
         return ", %s 到 %s";
+    };
+    zh_TW.prototype.x0ThroughX1 = function () {
+        return "%s 到 %s";
     };
     zh_TW.prototype.first = function () {
         return "第一個";
@@ -4142,6 +5583,9 @@ var zh_TW = (function () {
     zh_TW.prototype.commaOnThe = function () {
         return ", 在每月 ";
     };
+    zh_TW.prototype.onThe = function () {
+        return "在每月 ";
+    };
     zh_TW.prototype.spaceX0OfTheMonth = function () {
         return "%s ";
     };
@@ -4160,23 +5604,50 @@ var zh_TW = (function () {
     zh_TW.prototype.commaEveryX0Months = function () {
         return ", 每 %s 月";
     };
+    zh_TW.prototype.everyX0Months = function () {
+        return "每 %s 月";
+    };
+    zh_TW.prototype.commaEveryMonth = function () {
+        return ", 每個月";
+    };
+    zh_TW.prototype.everyMonth = function () {
+        return "每個月";
+    };
     zh_TW.prototype.commaOnlyInX0 = function () {
         return ", 僅在 %s";
+    };
+    zh_TW.prototype.onlyInX0 = function () {
+        return "僅在 %s";
     };
     zh_TW.prototype.commaOnlyInMonthX0 = function () {
         return ", 僅在%s";
     };
+    zh_TW.prototype.onlyInMonthX0 = function () {
+        return "僅在%s";
+    };
     zh_TW.prototype.commaOnlyInYearX0 = function () {
         return ", 僅在 %s 年";
+    };
+    zh_TW.prototype.onlyInYearX0 = function () {
+        return "僅在 %s 年";
     };
     zh_TW.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", 每月的最後一天";
     };
+    zh_TW.prototype.lastDayOfTheMonth = function () {
+        return "每月的最後一天";
+    };
     zh_TW.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", 每月的最後一個工作日";
     };
+    zh_TW.prototype.lastWeekdayOfTheMonth = function () {
+        return "每個月的最後一個工作日";
+    };
     zh_TW.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s 這個月的最後一天的前幾天";
+    };
+    zh_TW.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s 這個月的最後一天的前幾天";
     };
     zh_TW.prototype.firstWeekday = function () {
         return "第一個工作日";
@@ -4187,17 +5658,50 @@ var zh_TW = (function () {
     zh_TW.prototype.commaOnTheX0OfTheMonth = function () {
         return ", 每月的 %s ";
     };
+    zh_TW.prototype.theX0OfTheMonth = function () {
+        return "每月的 %s ";
+    };
     zh_TW.prototype.commaEveryX0Days = function () {
         return ", 每 %s 天";
+    };
+    zh_TW.prototype.everyX0Days = function () {
+        return "每 %s 天";
     };
     zh_TW.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", 在每月的 %s 和 %s 之間";
     };
+    zh_TW.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "在每月的 %s 和 %s 之間";
+    };
     zh_TW.prototype.commaOnDayX0OfTheMonth = function () {
         return ", 每月的 %s";
     };
+    zh_TW.prototype.onDayX0OfTheMonth = function () {
+        return "每月的 %s";
+    };
+    zh_TW.prototype.commaOnDayX0 = function () {
+        return "，第%s天";
+    };
+    zh_TW.prototype.onDayX0 = function () {
+        return "第%s天";
+    };
+    zh_TW.prototype.commaOnDayX0OfEveryMonth = function () {
+        return "，每個月的第%s天";
+    };
+    zh_TW.prototype.onDayX0OfEveryMonth = function () {
+        return "每月的第%s天";
+    };
+    zh_TW.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return "，在第%s天，每%t個月一次";
+    };
+    zh_TW.prototype.onDayX0OfEveryX0Months = function () {
+        return "第%s天，每%t個月";
+    };
     zh_TW.prototype.commaEveryX0Years = function () {
         return ", 每 %s 年";
+    };
+    zh_TW.prototype.everyX0Years = function () {
+        return "每 %s 年";
     };
     zh_TW.prototype.commaStartingX0 = function () {
         return ", %s 開始";
@@ -4284,11 +5788,20 @@ var ja = (function () {
     ja.prototype.commaEveryDay = function () {
         return "、毎日";
     };
+    ja.prototype.everyDay = function () {
+        return "毎日";
+    };
     ja.prototype.commaEveryX0DaysOfTheWeek = function () {
         return "、週のうち %s 日ごと";
     };
+    ja.prototype.everyX0DaysOfTheWeek = function () {
+        return "週のうち %s 日ごと";
+    };
     ja.prototype.commaX0ThroughX1 = function () {
         return "、%s から %s まで";
+    };
+    ja.prototype.x0ThroughX1 = function () {
+        return "%s から %s まで";
     };
     ja.prototype.first = function () {
         return "1 番目";
@@ -4308,6 +5821,9 @@ var ja = (function () {
     ja.prototype.commaOnThe = function () {
         return "次に";
     };
+    ja.prototype.onThe = function () {
+        return "次に";
+    };
     ja.prototype.spaceX0OfTheMonth = function () {
         return "月のうち %s";
     };
@@ -4320,14 +5836,32 @@ var ja = (function () {
     ja.prototype.commaEveryX0Months = function () {
         return "、%s か月ごと";
     };
+    ja.prototype.everyX0Months = function () {
+        return "%s か月ごと";
+    };
+    ja.prototype.commaEveryMonth = function () {
+        return "、毎月";
+    };
+    ja.prototype.everyMonth = function () {
+        return "毎月";
+    };
     ja.prototype.commaOnlyInX0 = function () {
+        return "%s でのみ";
+    };
+    ja.prototype.onlyInX0 = function () {
         return "%s でのみ";
     };
     ja.prototype.commaOnTheLastDayOfTheMonth = function () {
         return "次の最終日に";
     };
+    ja.prototype.lastDayOfTheMonth = function () {
+        return "次の最終日に";
+    };
     ja.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return "月の最後の平日に";
+    };
+    ja.prototype.lastWeekdayOfTheMonth = function () {
+        return "月の最後の平日";
     };
     ja.prototype.firstWeekday = function () {
         return "最初の平日";
@@ -4338,14 +5872,44 @@ var ja = (function () {
     ja.prototype.commaOnTheX0OfTheMonth = function () {
         return "月の %s に";
     };
+    ja.prototype.theX0OfTheMonth = function () {
+        return "月の %s に";
+    };
     ja.prototype.commaEveryX0Days = function () {
         return "、%s 日ごと";
+    };
+    ja.prototype.everyX0Days = function () {
+        return "%s 日ごと";
     };
     ja.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return "、月の %s 日から %s 日の間";
     };
+    ja.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "月の %s 日から %s 日の間";
+    };
     ja.prototype.commaOnDayX0OfTheMonth = function () {
         return "、月の %s 日目";
+    };
+    ja.prototype.onDayX0OfTheMonth = function () {
+        return "月の %s 日目";
+    };
+    ja.prototype.commaOnDayX0 = function () {
+        return "、%s日目";
+    };
+    ja.prototype.onDayX0 = function () {
+        return "%s日目";
+    };
+    ja.prototype.commaOnDayX0OfEveryMonth = function () {
+        return "、毎月 %s 日目";
+    };
+    ja.prototype.onDayX0OfEveryMonth = function () {
+        return "毎月 %s 日目";
+    };
+    ja.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return "、%s日目、%tか月ごと";
+    };
+    ja.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s日目、%tか月ごと";
     };
     ja.prototype.spaceAndSpace = function () {
         return "と";
@@ -4359,6 +5923,9 @@ var ja = (function () {
     ja.prototype.commaEveryX0Years = function () {
         return "、%s 年ごと";
     };
+    ja.prototype.everyX0Years = function () {
+        return "%s 年ごと";
+    };
     ja.prototype.commaStartingX0 = function () {
         return "、%s に開始";
     };
@@ -4371,6 +5938,9 @@ var ja = (function () {
     ja.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return "月の最終日の %s 日前";
     };
+    ja.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "月の最終日の %s 日前";
+    };
     ja.prototype.atX0SecondsPastTheMinuteGt20 = function () {
         return null;
     };
@@ -4380,7 +5950,13 @@ var ja = (function () {
     ja.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    ja.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     ja.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    ja.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     ja.prototype.lastDay = function () {
@@ -4420,7 +5996,13 @@ var he = (function () {
     he.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    he.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     he.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    he.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     he.prototype.use24HourTimeFormatByDefault = function () {
@@ -4480,11 +6062,20 @@ var he = (function () {
     he.prototype.commaEveryDay = function () {
         return ", כל יום";
     };
+    he.prototype.everyDay = function () {
+        return "כל יום";
+    };
     he.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", כל %s ימים בשבוע";
     };
+    he.prototype.everyX0DaysOfTheWeek = function () {
+        return "כל %s ימים בשבוע";
+    };
     he.prototype.commaX0ThroughX1 = function () {
         return ", %s עד %s";
+    };
+    he.prototype.x0ThroughX1 = function () {
+        return "%s עד %s";
     };
     he.prototype.first = function () {
         return "ראשון";
@@ -4504,6 +6095,9 @@ var he = (function () {
     he.prototype.commaOnThe = function () {
         return ", ב ";
     };
+    he.prototype.onThe = function () {
+        return "ב ";
+    };
     he.prototype.spaceX0OfTheMonth = function () {
         return " %s של החודש";
     };
@@ -4522,17 +6116,38 @@ var he = (function () {
     he.prototype.commaEveryX0Months = function () {
         return ", כל %s חודשים";
     };
+    he.prototype.everyX0Months = function () {
+        return "כל %s חודשים";
+    };
+    he.prototype.commaEveryMonth = function () {
+        return ", כל חודש";
+    };
+    he.prototype.everyMonth = function () {
+        return "כל חודש";
+    };
     he.prototype.commaOnlyInX0 = function () {
         return ", רק ב %s";
+    };
+    he.prototype.onlyInX0 = function () {
+        return "רק ב %s";
     };
     he.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", ביום האחרון של החודש";
     };
+    he.prototype.lastDayOfTheMonth = function () {
+        return "יום האחרון של החודש";
+    };
     he.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", ביום החול האחרון של החודש";
     };
+    he.prototype.lastWeekdayOfTheMonth = function () {
+        return "את יום השבוע האחרון בחודש";
+    };
     he.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s ימים לפני היום האחרון בחודש";
+    };
+    he.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s ימים לפני היום האחרון בחודש";
     };
     he.prototype.firstWeekday = function () {
         return "יום החול הראשון";
@@ -4543,17 +6158,50 @@ var he = (function () {
     he.prototype.commaOnTheX0OfTheMonth = function () {
         return ", ביום ה%s של החודש";
     };
+    he.prototype.theX0OfTheMonth = function () {
+        return "ביום ה%s של החודש";
+    };
     he.prototype.commaEveryX0Days = function () {
         return ", כל %s ימים";
+    };
+    he.prototype.everyX0Days = function () {
+        return "כל %s ימים";
     };
     he.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", בין היום ה%s וה%s של החודש";
     };
+    he.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "בין היום ה%s וה%s של החודש";
+    };
     he.prototype.commaOnDayX0OfTheMonth = function () {
         return ", ביום ה%s של החודש";
     };
+    he.prototype.onDayX0OfTheMonth = function () {
+        return "ביום ה%s של החודש";
+    };
+    he.prototype.commaOnDayX0 = function () {
+        return ", ביום %s";
+    };
+    he.prototype.onDayX0 = function () {
+        return "יום %s";
+    };
+    he.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", ביום %s בכל חודש";
+    };
+    he.prototype.onDayX0OfEveryMonth = function () {
+        return "יום %s בכל חודש";
+    };
+    he.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", ביום %s, כל %t חודשים";
+    };
+    he.prototype.onDayX0OfEveryX0Months = function () {
+        return "יום %t, כל %t חודשים";
+    };
     he.prototype.commaEveryX0Years = function () {
         return ", כל %s שנים";
+    };
+    he.prototype.everyX0Years = function () {
+        return "כל %s שנים";
     };
     he.prototype.commaStartingX0 = function () {
         return ", החל מ %s";
@@ -4589,7 +6237,13 @@ var cs = (function () {
     cs.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    cs.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     cs.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    cs.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     cs.prototype.use24HourTimeFormatByDefault = function () {
@@ -4649,11 +6303,20 @@ var cs = (function () {
     cs.prototype.commaEveryDay = function () {
         return ", každý den";
     };
+    cs.prototype.everyDay = function () {
+        return "každý den";
+    };
     cs.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", každých %s dní v týdnu";
     };
+    cs.prototype.everyX0DaysOfTheWeek = function () {
+        return "každých %s dní v týdnu";
+    };
     cs.prototype.commaX0ThroughX1 = function () {
         return ", od %s do %s";
+    };
+    cs.prototype.x0ThroughX1 = function () {
+        return "od %s do %s";
     };
     cs.prototype.first = function () {
         return "první";
@@ -4673,6 +6336,9 @@ var cs = (function () {
     cs.prototype.commaOnThe = function () {
         return ", ";
     };
+    cs.prototype.onThe = function () {
+        return "";
+    };
     cs.prototype.spaceX0OfTheMonth = function () {
         return " %s v měsíci";
     };
@@ -4691,17 +6357,38 @@ var cs = (function () {
     cs.prototype.commaEveryX0Months = function () {
         return ", každých %s měsíců";
     };
+    cs.prototype.everyX0Months = function () {
+        return "každých %s měsíců";
+    };
+    cs.prototype.commaEveryMonth = function () {
+        return ", každých měsíci";
+    };
+    cs.prototype.everyMonth = function () {
+        return "každých měsíci";
+    };
     cs.prototype.commaOnlyInX0 = function () {
         return ", pouze v %s";
+    };
+    cs.prototype.onlyInX0 = function () {
+        return "pouze v %s";
     };
     cs.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", poslední den v měsíci";
     };
+    cs.prototype.lastDayOfTheMonth = function () {
+        return "poslední den v měsíci";
+    };
     cs.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", poslední pracovní den v měsíci";
     };
+    cs.prototype.lastWeekdayOfTheMonth = function () {
+        return "poslední pracovní den v měsíci";
+    };
     cs.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dní před posledním dnem v měsíci";
+    };
+    cs.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dní před posledním dnem v měsíci";
     };
     cs.prototype.firstWeekday = function () {
         return "první pracovní den";
@@ -4712,17 +6399,50 @@ var cs = (function () {
     cs.prototype.commaOnTheX0OfTheMonth = function () {
         return ", v %s v měsíci";
     };
+    cs.prototype.theX0OfTheMonth = function () {
+        return "v %s v měsíci";
+    };
     cs.prototype.commaEveryX0Days = function () {
         return ", každých %s dnů";
+    };
+    cs.prototype.everyX0Days = function () {
+        return "každých %s dnů";
     };
     cs.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", mezi dny %s a %s v měsíci";
     };
+    cs.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "mezi dny %s a %s v měsíci";
+    };
     cs.prototype.commaOnDayX0OfTheMonth = function () {
         return ", %s. den v měsíci";
     };
+    cs.prototype.onDayX0OfTheMonth = function () {
+        return "%s měsíce";
+    };
+    cs.prototype.commaOnDayX0 = function () {
+        return ", %s. den";
+    };
+    cs.prototype.onDayX0 = function () {
+        return "%s. den";
+    };
+    cs.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", %s. den každého měsíce";
+    };
+    cs.prototype.onDayX0OfEveryMonth = function () {
+        return "%s každého měsíce";
+    };
+    cs.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", %s. den každé %t měsíce";
+    };
+    cs.prototype.onDayX0OfEveryX0Months = function () {
+        return "den %s, každé %t měsíce";
+    };
     cs.prototype.commaEveryX0Years = function () {
         return ", každých %s roků";
+    };
+    cs.prototype.everyX0Years = function () {
+        return "každých %s roků";
     };
     cs.prototype.commaStartingX0 = function () {
         return ", začínající %s";
@@ -4771,7 +6491,13 @@ var sk = (function () {
     sk.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    sk.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     sk.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    sk.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     sk.prototype.use24HourTimeFormatByDefault = function () {
@@ -4831,11 +6557,20 @@ var sk = (function () {
     sk.prototype.commaEveryDay = function () {
         return ", každý deň";
     };
+    sk.prototype.everyDay = function () {
+        return "každý deň";
+    };
     sk.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", každých %s dní v týždni";
     };
+    sk.prototype.everyX0DaysOfTheWeek = function () {
+        return "každých %s dní v týždni";
+    };
     sk.prototype.commaX0ThroughX1 = function () {
         return ", od %s do %s";
+    };
+    sk.prototype.x0ThroughX1 = function () {
+        return "od %s do %s";
     };
     sk.prototype.first = function () {
         return "prvý";
@@ -4855,6 +6590,9 @@ var sk = (function () {
     sk.prototype.commaOnThe = function () {
         return ", ";
     };
+    sk.prototype.onThe = function () {
+        return " ";
+    };
     sk.prototype.spaceX0OfTheMonth = function () {
         return " %s v mesiaci";
     };
@@ -4873,17 +6611,38 @@ var sk = (function () {
     sk.prototype.commaEveryX0Months = function () {
         return ", každých %s mesiacov";
     };
+    sk.prototype.everyX0Months = function () {
+        return "každých %s mesiacov";
+    };
+    sk.prototype.commaEveryMonth = function () {
+        return ", každý mesiac";
+    };
+    sk.prototype.everyMonth = function () {
+        return "každý mesiac";
+    };
     sk.prototype.commaOnlyInX0 = function () {
         return ", iba v %s";
+    };
+    sk.prototype.onlyInX0 = function () {
+        return "iba v %s";
     };
     sk.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", posledný deň v mesiaci";
     };
+    sk.prototype.lastDayOfTheMonth = function () {
+        return "posledný deň v mesiaci";
+    };
     sk.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", posledný pracovný deň v mesiaci";
     };
+    sk.prototype.lastWeekdayOfTheMonth = function () {
+        return "posledný pracovný deň v mesiaci";
+    };
     sk.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dní pred posledným dňom v mesiaci";
+    };
+    sk.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dní pred posledným dňom v mesiaci";
     };
     sk.prototype.firstWeekday = function () {
         return "prvý pracovný deň";
@@ -4894,17 +6653,50 @@ var sk = (function () {
     sk.prototype.commaOnTheX0OfTheMonth = function () {
         return ", v %s v mesiaci";
     };
+    sk.prototype.theX0OfTheMonth = function () {
+        return "%s v mesiaci";
+    };
     sk.prototype.commaEveryX0Days = function () {
         return ", každých %s dní";
+    };
+    sk.prototype.everyX0Days = function () {
+        return "každých %s dní";
     };
     sk.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", medzi dňami %s a %s v mesiaci";
     };
+    sk.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "medzi dňami %s a %s v mesiaci";
+    };
     sk.prototype.commaOnDayX0OfTheMonth = function () {
         return ", %s. deň v mesiaci";
     };
+    sk.prototype.onDayX0OfTheMonth = function () {
+        return "%s. deň v mesiaci";
+    };
+    sk.prototype.commaOnDayX0 = function () {
+        return ", v deň %s";
+    };
+    sk.prototype.onDayX0 = function () {
+        return "deň %s";
+    };
+    sk.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", %s. deň každého mesiaca";
+    };
+    sk.prototype.onDayX0OfEveryMonth = function () {
+        return "deň %s každého mesiaca";
+    };
+    sk.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", %s. deň, každých %t mesiacov";
+    };
+    sk.prototype.onDayX0OfEveryX0Months = function () {
+        return "deň %s, každých %t mesiacov";
+    };
     sk.prototype.commaEveryX0Years = function () {
         return ", každých %s rokov";
+    };
+    sk.prototype.everyX0Years = function () {
+        return "každých %s rokov";
     };
     sk.prototype.commaStartingX0 = function () {
         return ", začínajúcich %s";
@@ -4974,8 +6766,14 @@ var fi = (function () {
     fi.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", kuukauden päivien %s ja %s välillä";
     };
+    fi.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "kuukauden päivien %s ja %s välillä";
+    };
     fi.prototype.commaEveryDay = function () {
         return ", joka päivä";
+    };
+    fi.prototype.everyDay = function () {
+        return "joka päivä";
     };
     fi.prototype.commaEveryHour = function () {
         return ", joka tunti";
@@ -4986,20 +6784,62 @@ var fi = (function () {
     fi.prototype.commaEveryX0Days = function () {
         return ", joka %s. päivä";
     };
+    fi.prototype.everyX0Days = function () {
+        return "joka %s. päivä";
+    };
     fi.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", joka %s. viikonpäivä";
+    };
+    fi.prototype.everyX0DaysOfTheWeek = function () {
+        return "joka %s. viikonpäivä";
     };
     fi.prototype.commaEveryX0Months = function () {
         return ", joka %s. kuukausi";
     };
+    fi.prototype.everyX0Months = function () {
+        return "joka %s. kuukausi";
+    };
+    fi.prototype.commaEveryMonth = function () {
+        return ", joka päivä";
+    };
+    fi.prototype.everyMonth = function () {
+        return "joka päivä";
+    };
     fi.prototype.commaEveryX0Years = function () {
         return ", joka %s. vuosi";
+    };
+    fi.prototype.everyX0Years = function () {
+        return "joka %s. vuosi";
     };
     fi.prototype.commaOnDayX0OfTheMonth = function () {
         return ", kuukauden %s päivä";
     };
+    fi.prototype.onDayX0OfTheMonth = function () {
+        return "kuukauden %s päivä";
+    };
+    fi.prototype.commaOnDayX0 = function () {
+        return ", päivänä %s";
+    };
+    fi.prototype.onDayX0 = function () {
+        return "päivä %s";
+    };
+    fi.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", jokaisen kuukauden %s. päivänä";
+    };
+    fi.prototype.onDayX0OfEveryMonth = function () {
+        return "jokaisen kuukauden %s. päivä";
+    };
+    fi.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", %s. päivänä %t kuukauden välein";
+    };
+    fi.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s. päivä %t kuukauden välein";
+    };
     fi.prototype.commaOnlyInX0 = function () {
         return ", vain %s";
+    };
+    fi.prototype.onlyInX0 = function () {
+        return "vain %s";
     };
     fi.prototype.commaOnlyOnX0 = function () {
         return ", vain %s";
@@ -5007,11 +6847,20 @@ var fi = (function () {
     fi.prototype.commaOnThe = function () {
         return ",";
     };
+    fi.prototype.onThe = function () {
+        return "";
+    };
     fi.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", kuukauden viimeisenä päivänä";
     };
+    fi.prototype.lastDayOfTheMonth = function () {
+        return "kuukauden viimeinen päivä";
+    };
     fi.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", kuukauden viimeisenä viikonpäivänä";
+    };
+    fi.prototype.lastWeekdayOfTheMonth = function () {
+        return "viikon viimeinen päivä";
     };
     fi.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", kuukauden viimeinen %s";
@@ -5019,11 +6868,20 @@ var fi = (function () {
     fi.prototype.commaOnTheX0OfTheMonth = function () {
         return ", kuukauden %s";
     };
+    fi.prototype.theX0OfTheMonth = function () {
+        return "kuukauden %s";
+    };
     fi.prototype.commaX0ThroughX1 = function () {
         return ", %s - %s";
     };
+    fi.prototype.x0ThroughX1 = function () {
+        return "%s - %s";
+    };
     fi.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s päivää ennen kuukauden viimeistä päivää";
+    };
+    fi.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s päivää ennen kuukauden viimeistä päivää";
     };
     fi.prototype.commaStartingX0 = function () {
         return ", alkaen %s";
@@ -5091,7 +6949,13 @@ var fi = (function () {
     fi.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    fi.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     fi.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    fi.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     fi.prototype.lastDay = function () {
@@ -5162,26 +7026,74 @@ var sl = (function () {
     sl.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", od %s. do %s. dne v mesecu";
     };
+    sl.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "od %s. do %s. dne v mesecu";
+    };
     sl.prototype.commaEveryDay = function () {
         return ", vsak dan";
+    };
+    sl.prototype.everyDay = function () {
+        return "vsak dan";
     };
     sl.prototype.commaEveryX0Days = function () {
         return ", vsakih %s dni";
     };
+    sl.prototype.everyX0Days = function () {
+        return "vsakih %s dni";
+    };
     sl.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", vsakih %s dni v tednu";
+    };
+    sl.prototype.everyX0DaysOfTheWeek = function () {
+        return "vsakih %s dni v tednu";
     };
     sl.prototype.commaEveryX0Months = function () {
         return ", vsakih %s mesecev";
     };
+    sl.prototype.everyX0Months = function () {
+        return "vsakih %s mesecev";
+    };
+    sl.prototype.commaEveryMonth = function () {
+        return ", vsak mesec";
+    };
+    sl.prototype.everyMonth = function () {
+        return "vsak mesec";
+    };
     sl.prototype.commaEveryX0Years = function () {
         return ", vsakih %s let";
+    };
+    sl.prototype.everyX0Years = function () {
+        return "vsakih %s let";
     };
     sl.prototype.commaOnDayX0OfTheMonth = function () {
         return ", %s. dan v mesecu";
     };
+    sl.prototype.onDayX0OfTheMonth = function () {
+        return "%s. dan v mesecu";
+    };
+    sl.prototype.commaOnDayX0 = function () {
+        return ", %s. dan";
+    };
+    sl.prototype.onDayX0 = function () {
+        return "%s. dan";
+    };
+    sl.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", %s. dan vsakega meseca";
+    };
+    sl.prototype.onDayX0OfEveryMonth = function () {
+        return "%s. dan vsakega meseca";
+    };
+    sl.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", %s. dan, vsakih %t mesecev";
+    };
+    sl.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s. dan, vsakih %t mesecev";
+    };
     sl.prototype.commaOnlyInX0 = function () {
         return ", samo v %s";
+    };
+    sl.prototype.onlyInX0 = function () {
+        return "samo v %s";
     };
     sl.prototype.commaOnlyOnX0 = function () {
         return ", samo v %s";
@@ -5192,14 +7104,26 @@ var sl = (function () {
     sl.prototype.commaOnThe = function () {
         return ", ";
     };
+    sl.prototype.onThe = function () {
+        return " ";
+    };
     sl.prototype.commaOnTheLastDayOfTheMonth = function () {
-        return ", zadnji %s v mesecu";
+        return ", zadnji dan v mesecu";
+    };
+    sl.prototype.lastDayOfTheMonth = function () {
+        return "zadnji dan v mesecu";
     };
     sl.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", zadnji delovni dan v mesecu";
     };
+    sl.prototype.lastWeekdayOfTheMonth = function () {
+        return "zadnji delovni dan v mesecu";
+    };
     sl.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dni pred koncem meseca";
+    };
+    sl.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dni pred koncem meseca";
     };
     sl.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", zadnji %s v mesecu";
@@ -5207,8 +7131,14 @@ var sl = (function () {
     sl.prototype.commaOnTheX0OfTheMonth = function () {
         return ", %s v mesecu";
     };
+    sl.prototype.theX0OfTheMonth = function () {
+        return "%s v mesecu";
+    };
     sl.prototype.commaX0ThroughX1 = function () {
         return ", od %s do %s";
+    };
+    sl.prototype.x0ThroughX1 = function () {
+        return "od %s do %s";
     };
     sl.prototype.everyHour = function () {
         return "vsako uro";
@@ -5270,7 +7200,13 @@ var sl = (function () {
     sl.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    sl.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     sl.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    sl.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     sl.prototype.atX0MinutesPastTheHourGt20 = function () {
@@ -5326,7 +7262,13 @@ var sw = (function () {
     sw.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    sw.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     sw.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    sw.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     sw.prototype.use24HourTimeFormatByDefault = function () {
@@ -5387,11 +7329,20 @@ var sw = (function () {
     sw.prototype.commaEveryDay = function () {
         return ", kila siku";
     };
+    sw.prototype.everyDay = function () {
+        return "kila siku";
+    };
     sw.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", kila siku %s ya wiki";
     };
+    sw.prototype.everyX0DaysOfTheWeek = function () {
+        return "kila siku %s ya wiki";
+    };
     sw.prototype.commaX0ThroughX1 = function () {
         return ", %s hadi %s";
+    };
+    sw.prototype.x0ThroughX1 = function () {
+        return "%s hadi %s";
     };
     sw.prototype.first = function () {
         return "ya kwanza";
@@ -5411,6 +7362,9 @@ var sw = (function () {
     sw.prototype.commaOnThe = function () {
         return ", kwenye ";
     };
+    sw.prototype.onThe = function () {
+        return "kwenye ";
+    };
     sw.prototype.spaceX0OfTheMonth = function () {
         return " siku %s ya mwezi";
     };
@@ -5429,17 +7383,38 @@ var sw = (function () {
     sw.prototype.commaEveryX0Months = function () {
         return ", kila mwezi wa %s";
     };
+    sw.prototype.everyX0Months = function () {
+        return "kila mwezi wa %s";
+    };
+    sw.prototype.commaEveryMonth = function () {
+        return ", kila mwezi";
+    };
+    sw.prototype.everyMonth = function () {
+        return "kila mwezi";
+    };
     sw.prototype.commaOnlyInX0 = function () {
         return ", kwa %s tu";
+    };
+    sw.prototype.onlyInX0 = function () {
+        return "kwa %s tu";
     };
     sw.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", siku ya mwisho wa mwezi";
     };
+    sw.prototype.lastDayOfTheMonth = function () {
+        return "siku ya mwisho ya mwezi";
+    };
     sw.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", wikendi ya mwisho wa mwezi";
     };
+    sw.prototype.lastWeekdayOfTheMonth = function () {
+        return "wikendi ya mwisho wa mwezi";
+    };
     sw.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", siku ya %s kabla ya siku ya mwisho wa mwezi";
+    };
+    sw.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "siku ya %s kabla ya siku ya mwisho wa mwezi";
     };
     sw.prototype.firstWeekday = function () {
         return "siku za kazi ya kwanza";
@@ -5450,17 +7425,50 @@ var sw = (function () {
     sw.prototype.commaOnTheX0OfTheMonth = function () {
         return ", siku ya %s ya mwezi";
     };
+    sw.prototype.theX0OfTheMonth = function () {
+        return "siku ya %s ya mwezi";
+    };
     sw.prototype.commaEveryX0Days = function () {
         return ", kila siku %s";
+    };
+    sw.prototype.everyX0Days = function () {
+        return "kila siku %s";
     };
     sw.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", kati ya siku %s na %s ya mwezi";
     };
+    sw.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "kati ya siku %s na %s ya mwezi";
+    };
     sw.prototype.commaOnDayX0OfTheMonth = function () {
         return ", siku ya %s ya mwezi";
     };
+    sw.prototype.onDayX0OfTheMonth = function () {
+        return "siku ya %s ya mwezi";
+    };
+    sw.prototype.commaOnDayX0 = function () {
+        return ", siku ya %s";
+    };
+    sw.prototype.onDayX0 = function () {
+        return "siku ya %s";
+    };
+    sw.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", siku ya %s ya kila mwezi";
+    };
+    sw.prototype.onDayX0OfEveryMonth = function () {
+        return "siku %s ya kila mwezi";
+    };
+    sw.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", siku ya %s, kila miezi %t";
+    };
+    sw.prototype.onDayX0OfEveryX0Months = function () {
+        return "siku %s, kila miezi %t";
+    };
     sw.prototype.commaEveryX0Years = function () {
         return ", kila miaka %s";
+    };
+    sw.prototype.everyX0Years = function () {
+        return "kila miaka %s";
     };
     sw.prototype.commaStartingX0 = function () {
         return ", kwanzia %s";
@@ -5509,7 +7517,13 @@ var fa = (function () {
     fa.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    fa.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     fa.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    fa.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     fa.prototype.use24HourTimeFormatByDefault = function () {
@@ -5569,11 +7583,20 @@ var fa = (function () {
     fa.prototype.commaEveryDay = function () {
         return ", هر روز";
     };
+    fa.prototype.everyDay = function () {
+        return "هر روز";
+    };
     fa.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", هر %s روز از هفته";
     };
+    fa.prototype.everyX0DaysOfTheWeek = function () {
+        return "هر %s روز از هفته";
+    };
     fa.prototype.commaX0ThroughX1 = function () {
         return ", %s تا %s";
+    };
+    fa.prototype.x0ThroughX1 = function () {
+        return "%s تا %s";
     };
     fa.prototype.first = function () {
         return "اول";
@@ -5593,6 +7616,9 @@ var fa = (function () {
     fa.prototype.commaOnThe = function () {
         return ", در ";
     };
+    fa.prototype.onThe = function () {
+        return "در ";
+    };
     fa.prototype.spaceX0OfTheMonth = function () {
         return " %s ماه";
     };
@@ -5611,17 +7637,38 @@ var fa = (function () {
     fa.prototype.commaEveryX0Months = function () {
         return ", هر %s ماه";
     };
+    fa.prototype.everyX0Months = function () {
+        return "هر %s ماه";
+    };
+    fa.prototype.commaEveryMonth = function () {
+        return ", هر ماه";
+    };
+    fa.prototype.everyMonth = function () {
+        return "هر ماه";
+    };
     fa.prototype.commaOnlyInX0 = function () {
         return ", فقط در %s";
+    };
+    fa.prototype.onlyInX0 = function () {
+        return "فقط در %s";
     };
     fa.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", در آخرین روز ماه";
     };
+    fa.prototype.lastDayOfTheMonth = function () {
+        return " آخرین روز ماه";
+    };
     fa.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", در آخرین روز ماه";
     };
+    fa.prototype.lastWeekdayOfTheMonth = function () {
+        return " آخرین روز ماه";
+    };
     fa.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s روز قبل از آخرین روز ماه";
+    };
+    fa.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s روز قبل از آخرین روز ماه";
     };
     fa.prototype.firstWeekday = function () {
         return "اولین روز";
@@ -5632,14 +7679,44 @@ var fa = (function () {
     fa.prototype.commaOnTheX0OfTheMonth = function () {
         return ", در %s ماه";
     };
+    fa.prototype.theX0OfTheMonth = function () {
+        return "در %s ماه";
+    };
     fa.prototype.commaEveryX0Days = function () {
         return ", هر %s روز";
+    };
+    fa.prototype.everyX0Days = function () {
+        return "هر %s روز";
     };
     fa.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", بین روز %s و %s ماه";
     };
+    fa.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "بین روز %s و %s ماه";
+    };
     fa.prototype.commaOnDayX0OfTheMonth = function () {
         return ", در %s ماه";
+    };
+    fa.prototype.onDayX0OfTheMonth = function () {
+        return "در %s ماه";
+    };
+    fa.prototype.commaOnDayX0 = function () {
+        return "، در روز %s";
+    };
+    fa.prototype.onDayX0 = function () {
+        return "روز %s";
+    };
+    fa.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", در روز %s هر ماه";
+    };
+    fa.prototype.onDayX0OfEveryMonth = function () {
+        return "روز %s هر ماه";
+    };
+    fa.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return "، در روز %s ، هر %t ماه";
+    };
+    fa.prototype.onDayX0OfEveryX0Months = function () {
+        return "روز %s ، هر %t ماه یکبار";
     };
     fa.prototype.commaEveryMinute = function () {
         return ", هر minute";
@@ -5649,6 +7726,9 @@ var fa = (function () {
     };
     fa.prototype.commaEveryX0Years = function () {
         return ", هر %s سال";
+    };
+    fa.prototype.everyX0Years = function () {
+        return "هر %s سال";
     };
     fa.prototype.commaStartingX0 = function () {
         return ", آغاز %s";
@@ -5684,7 +7764,13 @@ var ca = (function () {
     ca.prototype.commaMonthX0ThroughMonthX1 = function () {
         return null;
     };
+    ca.prototype.monthX0ThroughMonthX1 = function () {
+        return null;
+    };
     ca.prototype.commaYearX0ThroughYearX1 = function () {
+        return null;
+    };
+    ca.prototype.yearX0ThroughYearX1 = function () {
         return null;
     };
     ca.prototype.use24HourTimeFormatByDefault = function () {
@@ -5714,23 +7800,68 @@ var ca = (function () {
     ca.prototype.commaBetweenDayX0AndX1OfTheMonth = function () {
         return ", entre els dies %s i %s del mes";
     };
+    ca.prototype.betweenDayX0AndX1OfTheMonth = function () {
+        return "entre els dies %s i %s del mes";
+    };
     ca.prototype.commaEveryDay = function () {
         return ", cada dia";
+    };
+    ca.prototype.everyDay = function () {
+        return "cada dia";
     };
     ca.prototype.commaEveryX0Days = function () {
         return ", cada %s dies";
     };
+    ca.prototype.everyX0Days = function () {
+        return "cada %s dies";
+    };
     ca.prototype.commaEveryX0DaysOfTheWeek = function () {
         return ", cada %s dies de la setmana";
+    };
+    ca.prototype.everyX0DaysOfTheWeek = function () {
+        return "cada %s dies de la setmana";
     };
     ca.prototype.commaEveryX0Months = function () {
         return ", cada %s mesos";
     };
+    ca.prototype.everyX0Months = function () {
+        return "cada %s mesos";
+    };
+    ca.prototype.commaEveryMonth = function () {
+        return ", cada mes";
+    };
+    ca.prototype.everyMonth = function () {
+        return "cada mes";
+    };
     ca.prototype.commaOnDayX0OfTheMonth = function () {
         return ", el dia %s del mes";
     };
+    ca.prototype.onDayX0OfTheMonth = function () {
+        return "el dia %s del mes";
+    };
+    ca.prototype.commaOnDayX0 = function () {
+        return ", el dia 3";
+    };
+    ca.prototype.onDayX0 = function () {
+        return "dia %s";
+    };
+    ca.prototype.commaOnDayX0OfEveryMonth = function () {
+        return ", el dia %s de cada mes";
+    };
+    ca.prototype.onDayX0OfEveryMonth = function () {
+        return "%s de cada mes";
+    };
+    ca.prototype.commaOnDayX0OfEveryX0Months = function () {
+        return ", el dia %s, cada 3 mesos";
+    };
+    ca.prototype.onDayX0OfEveryX0Months = function () {
+        return "%s, cada 3 mesos";
+    };
     ca.prototype.commaOnlyInX0 = function () {
         return ", sólo en %s";
+    };
+    ca.prototype.onlyInX0 = function () {
+        return "sólo en %s";
     };
     ca.prototype.commaOnlyOnX0 = function () {
         return ", només el %s";
@@ -5741,14 +7872,26 @@ var ca = (function () {
     ca.prototype.commaOnThe = function () {
         return ", en el ";
     };
+    ca.prototype.onThe = function () {
+        return "en el ";
+    };
     ca.prototype.commaOnTheLastDayOfTheMonth = function () {
         return ", en l'últim dia del mes";
+    };
+    ca.prototype.lastDayOfTheMonth = function () {
+        return "l'últim dia del mes";
     };
     ca.prototype.commaOnTheLastWeekdayOfTheMonth = function () {
         return ", en l'últim dia de la setmana del mes";
     };
+    ca.prototype.lastWeekdayOfTheMonth = function () {
+        return "l'últim dia de la setmana del mes";
+    };
     ca.prototype.commaDaysBeforeTheLastDayOfTheMonth = function () {
         return ", %s dies abans de l'últim dia del mes";
+    };
+    ca.prototype.daysBeforeTheLastDayOfTheMonth = function () {
+        return "%s dies abans de l'últim dia del mes";
     };
     ca.prototype.commaOnTheLastX0OfTheMonth = function () {
         return ", en l'últim %s del mes";
@@ -5756,8 +7899,14 @@ var ca = (function () {
     ca.prototype.commaOnTheX0OfTheMonth = function () {
         return ", en el %s del mes";
     };
+    ca.prototype.theX0OfTheMonth = function () {
+        return "el %s del mes";
+    };
     ca.prototype.commaX0ThroughX1 = function () {
         return ", de %s a %s";
+    };
+    ca.prototype.x0ThroughX1 = function () {
+        return "de %s a %s";
     };
     ca.prototype.everyHour = function () {
         return "cada hora";
@@ -5818,6 +7967,9 @@ var ca = (function () {
     };
     ca.prototype.commaEveryX0Years = function () {
         return ", cada %s anys";
+    };
+    ca.prototype.everyX0Years = function () {
+        return "cada %s anys";
     };
     ca.prototype.commaStartingX0 = function () {
         return ", començant %s";

@@ -11,10 +11,15 @@ export class sw implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
     return null;
   }
-
+  yearX0ThroughYearX1(): string {
+    return null;
+  }
   use24HourTimeFormatByDefault() {
     return false;
   }
@@ -74,11 +79,20 @@ export class sw implements Locale {
   commaEveryDay() {
     return ", kila siku";
   }
+  everyDay() {
+    return "kila siku";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", kila siku %s ya wiki";
   }
+  everyX0DaysOfTheWeek() {
+    return "kila siku %s ya wiki";
+  }
   commaX0ThroughX1() {
     return ", %s hadi %s";
+  }
+  x0ThroughX1() {
+    return "%s hadi %s";
   }
   first() {
     return "ya kwanza";
@@ -97,6 +111,9 @@ export class sw implements Locale {
   }
   commaOnThe() {
     return ", kwenye ";
+  }
+  onThe() {
+    return "kwenye ";
   }
   spaceX0OfTheMonth() {
     return " siku %s ya mwezi";
@@ -117,18 +134,38 @@ export class sw implements Locale {
   commaEveryX0Months() {
     return ", kila mwezi wa %s";
   }
+  everyX0Months() {
+    return "kila mwezi wa %s";
+  }
+  commaEveryMonth(): string {
+    return ", kila mwezi";
+  }
+  everyMonth(): string {
+    return "kila mwezi";
+  }
   commaOnlyInX0() {
-    //    return ", only in %s";
     return ", kwa %s tu";
+  }
+  onlyInX0() {
+    return "kwa %s tu";
   }
   commaOnTheLastDayOfTheMonth() {
     return ", siku ya mwisho wa mwezi";
   }
+  lastDayOfTheMonth() {
+    return "siku ya mwisho ya mwezi";
+  }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", wikendi ya mwisho wa mwezi";
   }
+  lastWeekdayOfTheMonth() {
+    return "wikendi ya mwisho wa mwezi"
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", siku ya %s kabla ya siku ya mwisho wa mwezi";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "siku ya %s kabla ya siku ya mwisho wa mwezi";
   }
   firstWeekday() {
     return "siku za kazi ya kwanza";
@@ -139,17 +176,50 @@ export class sw implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", siku ya %s ya mwezi";
   }
+  theX0OfTheMonth() {
+    return "siku ya %s ya mwezi";
+  }
   commaEveryX0Days() {
     return ", kila siku %s";
+  }
+  everyX0Days() {
+    return "kila siku %s";
   }
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", kati ya siku %s na %s ya mwezi";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "kati ya siku %s na %s ya mwezi";
+  }
   commaOnDayX0OfTheMonth() {
     return ", siku ya %s ya mwezi";
   }
+  onDayX0OfTheMonth() {
+    return "siku ya %s ya mwezi";
+  }
+  commaOnDayX0() {
+    return ", siku ya %s";
+  }
+  onDayX0() {
+    return "siku ya %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", siku ya %s ya kila mwezi";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "siku %s ya kila mwezi";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", siku ya %s, kila miezi %t";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "siku %s, kila miezi %t";
+  }
   commaEveryX0Years() {
     return ", kila miaka %s";
+  }
+  everyX0Years() {
+    return "kila miaka %s";
   }
   commaStartingX0() {
     return ", kwanzia %s";

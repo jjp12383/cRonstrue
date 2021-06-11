@@ -3,12 +3,12 @@
   "title": "cRonstrue",
   "version": "1.113.0",
   "description": "Convert cron expressions into human readable descriptions",
-  "author": "Brady Holt",
+  "author": "Justin Paresky",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/bradymholt/cronstrue/issues"
+    "url": "https://github.com/jjp12383/cRonstrue/issues"
   },
-  "homepage": "https://github.com/bradymholt/cronstrue",
+  "homepage": "https://github.com/jjp12383/cRonstrue",
   "keywords": [
     "cron",
     "cronjob",
@@ -34,7 +34,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bradymholt/cronstrue.git"
+    "url": "git+https://github.com/jjp12383/cronstrue.git"
   },
   "publishConfig": {
     "access": "public"
@@ -43,7 +43,7 @@
     "printWidth": 120
   },
   "devDependencies": {
-    "@types/chai": "^4.2.11",
+    "@types/chai": "^4.2.18",
     "@types/mocha": "^8.0.0",
     "chai": "^4.2.0",
     "handlebars": "^4.7.6",

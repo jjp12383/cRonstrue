@@ -23,8 +23,14 @@ export class zh_CN implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
     return ", 从%s年至%s年";
+  }
+  yearX0ThroughYearX1(): string {
+    return "从%s年至%s年";
   }
   use24HourTimeFormatByDefault() {
     return false;
@@ -83,11 +89,20 @@ export class zh_CN implements Locale {
   commaEveryDay() {
     return ", 每天";
   }
+  everyDay() {
+    return "每天";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", 每周的每 %s 天";
   }
+  everyX0DaysOfTheWeek() {
+    return "每周的每 %s 天";
+  }
   commaX0ThroughX1() {
     return ", %s至%s";
+  }
+  x0ThroughX1() {
+    return "%s至%s";
   }
   first() {
     return "第一个";
@@ -107,6 +122,9 @@ export class zh_CN implements Locale {
   commaOnThe() {
     return ", 限每月的";
   }
+  onThe() {
+    return "限每月的";
+  }
   spaceX0OfTheMonth() {
     return "%s";
   }
@@ -125,23 +143,50 @@ export class zh_CN implements Locale {
   commaEveryX0Months() {
     return ", 每隔 %s 个月";
   }
+  everyX0Months() {
+    return "每隔 %s 个月";
+  }
+  commaEveryMonth(): string {
+    return ", 每个月";
+  }
+  everyMonth(): string {
+    return "每个月";
+  }
   commaOnlyInX0() {
     return ", 仅限%s";
+  }
+  onlyInX0() {
+    return "仅限%s";
   }
   commaOnlyInMonthX0() {
     return ", 仅于%s份";
   }
+  onlyInMonthX0() {
+    return "仅于%s份";
+  }
   commaOnlyInYearX0() {
     return ", 仅于 %s 年";
+  }
+  onlyInYearX0() {
+    return "仅于 %s 年";
   }
   commaOnTheLastDayOfTheMonth() {
     return ", 限每月的最后一天";
   }
+  lastDayOfTheMonth() {
+    return "每月的最后一天";
+  }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", 限每月的最后一个工作日";
   }
+  lastWeekdayOfTheMonth() {
+    return "每个月的最后一个工作日";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", 限每月最后%s天";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "限每月最后%s天";
   }
   firstWeekday() {
     return "第一个工作日";
@@ -152,17 +197,50 @@ export class zh_CN implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", 限每月的%s";
   }
+  theX0OfTheMonth() {
+    return "限每月的%s";
+  }
   commaEveryX0Days() {
     return ", 每隔 %s 天";
+  }
+  everyX0Days() {
+    return "每隔 %s 天";
   }
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", 限每月的 %s 至 %s 之间";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "限每月的 %s 至 %s 之间";
+  }
   commaOnDayX0OfTheMonth() {
     return ", 限每月%s";
   }
+  onDayX0OfTheMonth() {
+    return "限每月%s";
+  }
+  commaOnDayX0() {
+    return "，第%s天";
+  }
+  onDayX0() {
+    return "第%s天";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return "，每个月的第%s天";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "每月的第%s天";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return "，在第%s天，每%t个月一次";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "第%s天，每%t个月";
+  }
   commaEveryX0Years() {
     return ", 每隔 %s 年";
+  }
+  everyX0Years() {
+    return "每隔 %s 年";
   }
   commaStartingX0() {
     return ", %s开始";

@@ -1,6 +1,6 @@
 import { StringUtilities } from "./stringUtilities";
 import { CronParser } from "./cronParser";
-import { Options } from "./options";
+import { Options, DayOfWeekData, DayOfMonthData, ModuloOptions } from "./options";
 
 import { Locale } from "./i18n/locale";
 import { LocaleLoader } from "./i18n/localeLoader";
@@ -24,7 +24,8 @@ export class ExpressionDescriptor {
    *         verbose = false,
    *         dayOfWeekStartIndexZero = true,
    *         use24HourTimeFormat = false,
-   *         locale = 'en'
+   *         locale = 'en',
+   *         modulos = ModuloOptions,
    *     }={}]
    * @returns {string}
    */
@@ -36,6 +37,7 @@ export class ExpressionDescriptor {
       dayOfWeekStartIndexZero = true,
       use24HourTimeFormat,
       locale = "en",
+      modulos = { dayModulo: 0, weekModulo: 0, monthModulo: 0 },
     }: Options = {}
   ): string {
     // We take advantage of Destructuring Object Parameters (and defaults) in TS/ES6 and now we will reassemble back to
@@ -47,10 +49,38 @@ export class ExpressionDescriptor {
       dayOfWeekStartIndexZero: dayOfWeekStartIndexZero,
       use24HourTimeFormat: use24HourTimeFormat,
       locale: locale,
+      modulos: modulos,
     };
 
     let descripter = new ExpressionDescriptor(expression, options);
     return descripter.getFullDescription();
+  }
+
+  static toObject(
+    expression: string,
+    {
+      throwExceptionOnParseError = true,
+      verbose = false,
+      dayOfWeekStartIndexZero = true,
+      use24HourTimeFormat,
+      locale = "en",
+      modulos = { dayModulo: 0, weekModulo: 0, monthModulo: 0 },
+    }: Options = {}
+  ): object {
+    // We take advantage of Destructuring Object Parameters (and defaults) in TS/ES6 and now we will reassemble back to
+    // an Options type so we can pass around options with ease.
+
+    let options = <Options>{
+      throwExceptionOnParseError: throwExceptionOnParseError,
+      verbose: verbose,
+      dayOfWeekStartIndexZero: dayOfWeekStartIndexZero,
+      use24HourTimeFormat: use24HourTimeFormat,
+      locale: locale,
+      modulos: modulos,
+    };
+
+    let descripter = new ExpressionDescriptor(expression, options);
+    return descripter.getPartsOfDescription();
   }
 
   static initialize(localesLoader: LocaleLoader) {
@@ -85,13 +115,13 @@ export class ExpressionDescriptor {
     try {
       let parser = new CronParser(this.expression, this.options.dayOfWeekStartIndexZero);
       this.expressionParts = parser.parse();
-      var timeSegment = this.getTimeOfDayDescription();
-      var dayOfMonthDesc = this.getDayOfMonthDescription();
-      var monthDesc = this.getMonthDescription();
-      var dayOfWeekDesc = this.getDayOfWeekDescription();
-      var yearDesc = this.getYearDescription();
+      var timeSegment = this.getTimeOfDayDescription(false);
+      var dayOfMonthDesc = this.getDayOfMonthDescription(false);
+      var monthDesc = this.getMonthDescription(false);
+      var dayOfWeekDesc = this.getDayOfWeekDescription(false);
+      var yearDesc = this.getYearDescription(false);
 
-      description += timeSegment + dayOfMonthDesc + dayOfWeekDesc + monthDesc + yearDesc;
+      description += timeSegment + dayOfMonthDesc.description + dayOfWeekDesc.description + monthDesc.description + yearDesc;
       description = this.transformVerbosity(description, this.options.verbose);
 
       // uppercase first character
@@ -106,7 +136,55 @@ export class ExpressionDescriptor {
     return description;
   }
 
-  protected getTimeOfDayDescription() {
+  protected getPartsOfDescription() {
+    let description = {}
+    try {
+      let parser = new CronParser(this.expression, this.options.dayOfWeekStartIndexZero);
+      this.expressionParts = parser.parse();
+      var timeSegment = this.getTimeOfDayDescription(true);
+      var dayOfMonthDesc = this.getDayOfMonthDescription(true);
+      var monthDesc = this.getMonthDescription(true);
+      var dayOfWeekDesc = this.getDayOfWeekDescription(true);
+      var yearDesc = this.getYearDescription(true);
+      let byValue
+      let label
+
+      // @ts-ignore
+      if (dayOfWeekDesc.data && dayOfWeekDesc.data.day) {
+        byValue = 'byDay'
+        label = `${dayOfWeekDesc.description} ${monthDesc.description}`
+      } else if (dayOfWeekDesc.data && dayOfWeekDesc.data.days) {
+        byValue = 'byWeek'
+        label = `${dayOfWeekDesc.description} ${monthDesc.description}`
+      } else if (dayOfMonthDesc.data && dayOfMonthDesc.data.days) {
+        byValue = 'byDate'
+        label = `${dayOfMonthDesc.description} ${monthDesc.description}`
+      } else if (dayOfMonthDesc.data && dayOfMonthDesc.data.occurs) {
+        byValue = 'byDays'
+        label = `${dayOfMonthDesc.description}`
+      }
+
+      description = {
+        cronLine: this.expression,
+        time: timeSegment,
+        dayOfMonth: dayOfMonthDesc,
+        month: monthDesc,
+        dayOfWeek: dayOfWeekDesc,
+        year: yearDesc,
+        byValue,
+        label,
+      }
+    } catch (ex) {
+      if (!this.options.throwExceptionOnParseError) {
+        description = this.i18n.anErrorOccuredWhenGeneratingTheExpressionD();
+      } else {
+        throw `${ex}`;
+      }
+    }
+    return description;
+  }
+
+  protected getTimeOfDayDescription(skipGrammar: boolean) {
     let secondsExpression: string = this.expressionParts[0];
     let minuteExpression: string = this.expressionParts[1];
     let hourExpression: string = this.expressionParts[2];
@@ -120,7 +198,11 @@ export class ExpressionDescriptor {
       !StringUtilities.containsAny(secondsExpression, ExpressionDescriptor.specialCharacters)
     ) {
       // specific time of day (i.e. 10 14)
-      description += this.i18n.atSpace() + this.formatTime(hourExpression, minuteExpression, secondsExpression);
+      if (skipGrammar) {
+        description += this.formatTime(hourExpression, minuteExpression, secondsExpression);
+      } else {
+        description += this.i18n.atSpace() + this.formatTime(hourExpression, minuteExpression, secondsExpression);
+      }
     } else if (
       !secondsExpression &&
       minuteExpression.indexOf("-") > -1 &&
@@ -144,7 +226,9 @@ export class ExpressionDescriptor {
     ) {
       // hours list with single minute (i.e. 30 6,14,16)
       let hourParts: string[] = hourExpression.split(",");
-      description += this.i18n.at();
+      if (!skipGrammar) {
+        description += this.i18n.at();
+      }
 
       for (let i = 0; i < hourParts.length; i++) {
         description += " ";
@@ -264,9 +348,9 @@ export class ExpressionDescriptor {
     return description;
   }
 
-  protected getDayOfWeekDescription() {
+  protected getDayOfWeekDescription(skipGrammar: boolean) {
     var daysOfWeekNames = this.i18n.daysOfTheWeek();
-
+    let data: DayOfWeekData = null;
     let description: string = null;
     if (this.expressionParts[5] == "*") {
       // DOW is specified as * so we will not generate a description and defer to DOM part.
@@ -276,7 +360,7 @@ export class ExpressionDescriptor {
     } else {
       description = this.getSegmentDescription(
         this.expressionParts[5],
-        this.i18n.commaEveryDay(),
+        skipGrammar ? this.i18n.everyDay() : this.i18n.commaEveryDay(),
         (s) => {
           let exp: string = s;
           if (s.indexOf("#") > -1) {
@@ -292,16 +376,23 @@ export class ExpressionDescriptor {
             // rather than "every 1 days" just return empty string
             return "";
           } else {
+            if (skipGrammar) {
+              return StringUtilities.format(this.i18n.everyX0DaysOfTheWeek(), s);
+            }
             return StringUtilities.format(this.i18n.commaEveryX0DaysOfTheWeek(), s);
           }
         },
         (s) => {
+          if (skipGrammar) {
+            return this.i18n.x0ThroughX1();
+          }
           return this.i18n.commaX0ThroughX1();
         },
         (s) => {
           let format: string = null;
           if (s.indexOf("#") > -1) {
             let dayOfWeekOfMonthNumber: string = s.substring(s.indexOf("#") + 1);
+            let dayOfWeekNumber: string = s.substring(0, s.indexOf("#"));
             let dayOfWeekOfMonthDescription: string = null;
             switch (dayOfWeekOfMonthNumber) {
               case "1":
@@ -320,14 +411,38 @@ export class ExpressionDescriptor {
                 dayOfWeekOfMonthDescription = this.i18n.fifth();
                 break;
             }
-
-            format = this.i18n.commaOnThe() + dayOfWeekOfMonthDescription + this.i18n.spaceX0OfTheMonth();
+            data = {
+              day: daysOfWeekNames[parseInt(dayOfWeekNumber)],
+              occurs: dayOfWeekOfMonthDescription,
+              daysOfWeek: daysOfWeekNames,
+              occurOptions: [this.i18n.first(), this.i18n.second(), this.i18n.third(), this.i18n.fourth(), this.i18n.fifth()],
+            }
+            if (skipGrammar) {
+              format = dayOfWeekOfMonthDescription + this.i18n.spaceX0OfTheMonth();
+            } else {
+              format = this.i18n.commaOnThe() + dayOfWeekOfMonthDescription + this.i18n.spaceX0OfTheMonth();
+            }
           } else if (s.indexOf("L") > -1) {
-            format = this.i18n.commaOnTheLastX0OfTheMonth();
+            if (skipGrammar) {
+              format = this.i18n.lastDayOfTheMonth()
+            } else {
+              format = this.i18n.commaOnTheLastX0OfTheMonth();
+            }
           } else {
             // If both DOM and DOW are specified, the cron will execute at either time.
-            const domSpecified = this.expressionParts[3] != "*";
-            format = domSpecified ? this.i18n.commaAndOnX0() : this.i18n.commaOnlyOnX0();
+            const domSpecified = this.expressionParts[3] != "*"
+            const dayInts = s.split(',')
+            data = {
+              daysOfWeek: daysOfWeekNames,
+              textDays: dayInts.map(dayInt => daysOfWeekNames[parseInt(dayInt)]),
+              days: dayInts,
+              occurs: this.options.modulos.weekModulo.toString() || "1"
+            }
+            if (skipGrammar) {
+              format = domSpecified ? '%s' : '%s'
+            } else {
+              format = domSpecified ? this.i18n.commaAndOnX0() : this.i18n.commaOnlyOnX0();
+            }
           }
 
           return format;
@@ -335,49 +450,90 @@ export class ExpressionDescriptor {
       );
     }
 
-    return description;
+    return {
+      description,
+      data,
+    };
   }
 
-  protected getMonthDescription() {
+  protected getMonthDescription(skipGrammar: boolean) {
     var monthNames = this.i18n.monthsOfTheYear();
-
+    let data: object = null
+    let expression = this.expressionParts[4];
+    if (this.options.modulos.monthModulo) {
+      expression = `*/${this.options.modulos.monthModulo}`;
+    }
+    if (expression.indexOf('*') === -1 && expression.indexOf('?') === -1) {
+      const monthInts = expression.split(',')
+      data = {
+        months: monthInts.map(monthInt => monthNames[parseInt(monthInt) - 1])
+      }
+    }
     let description: string = this.getSegmentDescription(
-      this.expressionParts[4],
-      "",
+      expression,
+      skipGrammar ? this.i18n.everyMonth() : this.i18n.commaEveryMonth(),
       (s) => {
         return monthNames[parseInt(s) - 1];
       },
       (s) => {
-        //
-        if (parseInt(s) == 1) {
-          // rather than "every 1 months" just return empty string
-          return "";
+        data = {
+          occurs: s,
+        }
+        if (parseInt(s) === 1) {
+          if (skipGrammar) {
+            return StringUtilities.format(this.i18n.everyMonth(), s);
+          }
+          return StringUtilities.format(this.i18n.commaEveryMonth(), s);
         } else {
+          if (skipGrammar) {
+            return StringUtilities.format(this.i18n.everyX0Months(), s);
+          }
           return StringUtilities.format(this.i18n.commaEveryX0Months(), s);
         }
       },
       (s) => {
+        if (skipGrammar) {
+          return this.i18n.monthX0ThroughMonthX1() || this.i18n.x0ThroughX1();
+        }
         return this.i18n.commaMonthX0ThroughMonthX1() || this.i18n.commaX0ThroughX1();
       },
       (s) => {
+        if (skipGrammar) {
+          return this.i18n.onlyInMonthX0 ? this.i18n.onlyInMonthX0() : this.i18n.onlyInX0();
+        }
         return this.i18n.commaOnlyInMonthX0 ? this.i18n.commaOnlyInMonthX0() : this.i18n.commaOnlyInX0();
       }
     );
 
-    return description;
+    return {
+      description,
+      data,
+    };
   }
 
-  protected getDayOfMonthDescription(): string {
+  protected getDayOfMonthDescription(skipGrammar: boolean) {
     let description: string = null;
+    let data: DayOfMonthData = null;
     let expression: string = this.expressionParts[3];
 
+    if (this.options.modulos.dayModulo) {
+      expression = `*/${this.options.modulos.dayModulo}`;
+    }
     switch (expression) {
       case "L":
-        description = this.i18n.commaOnTheLastDayOfTheMonth();
+        if (skipGrammar) {
+          description = this.i18n.lastDayOfTheMonth();
+        } else {
+          description = this.i18n.commaOnTheLastDayOfTheMonth();
+        }
         break;
       case "WL":
       case "LW":
-        description = this.i18n.commaOnTheLastWeekdayOfTheMonth();
+        if (skipGrammar) {
+          description = this.i18n.lastWeekdayOfTheMonth();
+        } else {
+          description = this.i18n.commaOnTheLastWeekdayOfTheMonth();
+        }
         break;
       default:
         let weekDayNumberMatches = expression.match(/(\d{1,2}W)|(W\d{1,2})/); // i.e. 3W or W2
@@ -387,23 +543,40 @@ export class ExpressionDescriptor {
             dayNumber == 1
               ? this.i18n.firstWeekday()
               : StringUtilities.format(this.i18n.weekdayNearestDayX0(), dayNumber.toString());
-          description = StringUtilities.format(this.i18n.commaOnTheX0OfTheMonth(), dayString);
-
+          if (skipGrammar) {
+            description = StringUtilities.format(this.i18n.theX0OfTheMonth(), dayString);
+          } else {
+            description = StringUtilities.format(this.i18n.commaOnTheX0OfTheMonth(), dayString);
+          }
           break;
         } else {
           // Handle "last day offset" (i.e. L-5:  "5 days before the last day of the month")
           let lastDayOffSetMatches = expression.match(/L-(\d{1,2})/);
           if (lastDayOffSetMatches) {
             let offSetDays = lastDayOffSetMatches[1];
-            description = StringUtilities.format(this.i18n.commaDaysBeforeTheLastDayOfTheMonth(), offSetDays);
+            if (skipGrammar) {
+              description = StringUtilities.format(this.i18n.daysBeforeTheLastDayOfTheMonth(), offSetDays);
+            } else {
+              description = StringUtilities.format(this.i18n.commaDaysBeforeTheLastDayOfTheMonth(), offSetDays);
+            }
             break;
           } else if (expression == "*" && this.expressionParts[5] != "*") {
             // * dayOfMonth and dayOfWeek specified so use dayOfWeek verbiage instead
-            return "";
+            return {
+              description: "",
+              data: null,
+            }
           } else {
+            if (expression.indexOf('*') === -1 && expression.indexOf('?') === -1) {
+              if (expression.indexOf(',')) {
+                data = {
+                  days: expression.split(',')
+                }
+              }
+            }
             description = this.getSegmentDescription(
               expression,
-              this.i18n.commaEveryDay(),
+              skipGrammar ? this.i18n.everyDay() : this.i18n.commaEveryDay(),
               (s) => {
                 return s == "L"
                   ? this.i18n.lastDay()
@@ -412,13 +585,25 @@ export class ExpressionDescriptor {
                   : s;
               },
               (s) => {
+                data = {
+                  occurs: s,
+                }
+                if (skipGrammar) {
+                  return s == "1" ? this.i18n.everyDay() : this.i18n.everyX0Days();
+                }
                 return s == "1" ? this.i18n.commaEveryDay() : this.i18n.commaEveryX0Days();
               },
               (s) => {
+                if (skipGrammar) {
+                  return this.i18n.betweenDayX0AndX1OfTheMonth();
+                }
                 return this.i18n.commaBetweenDayX0AndX1OfTheMonth();
               },
               (s) => {
-                return this.i18n.commaOnDayX0OfTheMonth();
+                if (skipGrammar) {
+                  return this.i18n.onDayX0();
+                }
+                return this.i18n.commaOnDayX0();
               }
             );
           }
@@ -426,10 +611,13 @@ export class ExpressionDescriptor {
         }
     }
 
-    return description;
+    return {
+      description,
+      data,
+    };
   }
 
-  protected getYearDescription() {
+  protected getYearDescription(skipGrammar: boolean) {
     let description: string = this.getSegmentDescription(
       this.expressionParts[6],
       "",
@@ -437,12 +625,21 @@ export class ExpressionDescriptor {
         return /^\d+$/.test(s) ? new Date(parseInt(s), 1).getFullYear().toString() : s;
       },
       (s) => {
+        if (skipGrammar) {
+          return StringUtilities.format(this.i18n.everyX0Years(), s);
+        }
         return StringUtilities.format(this.i18n.commaEveryX0Years(), s);
       },
       (s) => {
+        if (skipGrammar) {
+          return this.i18n.yearX0ThroughYearX1() || this.i18n.x0ThroughX1();
+        }
         return this.i18n.commaYearX0ThroughYearX1() || this.i18n.commaX0ThroughX1();
       },
       (s) => {
+        if (skipGrammar) {
+          return this.i18n.onlyInYearX0() ? this.i18n.onlyInYearX0() : this.i18n.onlyInX0();
+        }
         return this.i18n.commaOnlyInYearX0 ? this.i18n.commaOnlyInYearX0() : this.i18n.commaOnlyInX0();
       }
     );
@@ -530,7 +727,6 @@ export class ExpressionDescriptor {
       }
     } else if (doesExpressionContainIncrement) {
       // Increment
-
       let segments: string[] = expression.split("/");
       description = StringUtilities.format(getIncrementDescriptionFormat(segments[1]), segments[1]);
 

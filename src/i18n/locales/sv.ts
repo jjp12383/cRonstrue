@@ -11,7 +11,13 @@ export class sv implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  yearX0ThroughYearX1(): string {
     return null;
   }
   use24HourTimeFormatByDefault() {
@@ -71,11 +77,20 @@ export class sv implements Locale {
   commaEveryDay() {
     return ", varje dag";
   }
+  everyDay() {
+    return "varje dag";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", var %s dag i veckan";
   }
+  everyX0DaysOfTheWeek() {
+    return "var %s dag i veckan";
+  }
   commaX0ThroughX1() {
     return ", %s till %s";
+  }
+  x0ThroughX1() {
+    return "%s till %s";
   }
   first() {
     return "första";
@@ -95,6 +110,9 @@ export class sv implements Locale {
   commaOnThe() {
     return ", den ";
   }
+  onThe() {
+    return "den ";
+  }
   spaceX0OfTheMonth() {
     return " %sen av månaden";
   }
@@ -113,17 +131,38 @@ export class sv implements Locale {
   commaEveryX0Months() {
     return ", var %s månad";
   }
+  everyX0Months() {
+    return "var %s månad";
+  }
+  commaEveryMonth(): string {
+    return ", varje månad";
+  }
+  everyMonth(): string {
+    return "varje månad";
+  }
   commaOnlyInX0() {
     return ", bara på %s";
+  }
+  onlyInX0() {
+    return "bara på %s";
   }
   commaOnTheLastDayOfTheMonth() {
     return ", på sista dagen av månaden";
   }
+  lastDayOfTheMonth() {
+    return "sista dagen av månaden";
+  }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", på sista veckodag av månaden";
   }
+  lastWeekdayOfTheMonth() {
+    return "sista veckodag av månaden";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s dagar före den sista dagen i månaden";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s dagar före den sista dagen i månaden";
   }
   firstWeekday() {
     return "första veckodag";
@@ -134,17 +173,50 @@ export class sv implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", på den %s av månaden";
   }
+  theX0OfTheMonth() {
+    return "den %s av månaden";
+  }
   commaEveryX0Days() {
     return ", var %s dag";
+  }
+  everyX0Days() {
+    return "var %s dag";
   }
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", mellan dag %s och %s av månaden";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "mellan dag %s och %s av månaden";
+  }
   commaOnDayX0OfTheMonth() {
     return ", på dag %s av månaden";
   }
+  onDayX0OfTheMonth() {
+    return "på dag %s av månaden";
+  }
+  commaOnDayX0() {
+    return ", på dag %s";
+  }
+  onDayX0() {
+    return "dag %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", på dag %s i varje månad";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "dag %s i varje månad";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", dag %s, var %t: e månad";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "dag %s, var %t: e månad";
+  }
   commaEveryX0Years() {
     return ", var %s år";
+  }
+  everyX0Years() {
+    return "var %s år";
   }
   commaStartingX0() {
     return ", startar %s";

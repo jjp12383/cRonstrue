@@ -10,10 +10,15 @@ export class he implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
     return null;
   }
-
+  yearX0ThroughYearX1(): string {
+    return null;
+  }
   use24HourTimeFormatByDefault() {
     return true;
   }
@@ -72,11 +77,20 @@ export class he implements Locale {
   commaEveryDay() {
     return ", כל יום";
   }
+  everyDay() {
+    return "כל יום";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", כל %s ימים בשבוע";
   }
+  everyX0DaysOfTheWeek() {
+    return "כל %s ימים בשבוע";
+  }
   commaX0ThroughX1() {
     return ", %s עד %s";
+  }
+  x0ThroughX1() {
+    return "%s עד %s";
   }
   first() {
     return "ראשון";
@@ -96,6 +110,9 @@ export class he implements Locale {
   commaOnThe() {
     return ", ב ";
   }
+  onThe() {
+    return "ב ";
+  }
   spaceX0OfTheMonth() {
     return " %s של החודש";
   }
@@ -114,17 +131,38 @@ export class he implements Locale {
   commaEveryX0Months() {
     return ", כל %s חודשים";
   }
+  everyX0Months() {
+    return "כל %s חודשים";
+  }
+  commaEveryMonth(): string {
+    return ", כל חודש";
+  }
+  everyMonth(): string {
+    return "כל חודש";
+  }
   commaOnlyInX0() {
     return ", רק ב %s";
+  }
+  onlyInX0() {
+    return "רק ב %s";
   }
   commaOnTheLastDayOfTheMonth() {
     return ", ביום האחרון של החודש";
   }
+  lastDayOfTheMonth() {
+    return "יום האחרון של החודש";
+  }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", ביום החול האחרון של החודש";
   }
+  lastWeekdayOfTheMonth() {
+    return "את יום השבוע האחרון בחודש";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s ימים לפני היום האחרון בחודש";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s ימים לפני היום האחרון בחודש";
   }
   firstWeekday() {
     return "יום החול הראשון";
@@ -135,17 +173,50 @@ export class he implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", ביום ה%s של החודש";
   }
+  theX0OfTheMonth() {
+    return "ביום ה%s של החודש";
+  }
   commaEveryX0Days() {
     return ", כל %s ימים";
+  }
+  everyX0Days() {
+    return "כל %s ימים";
   }
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", בין היום ה%s וה%s של החודש";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "בין היום ה%s וה%s של החודש";
+  }
   commaOnDayX0OfTheMonth() {
     return ", ביום ה%s של החודש";
   }
+  onDayX0OfTheMonth() {
+    return "ביום ה%s של החודש";
+  }
+  commaOnDayX0() {
+    return ", ביום %s";
+  }
+  onDayX0() {
+    return "יום %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", ביום %s בכל חודש";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "יום %s בכל חודש";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", ביום %s, כל %t חודשים";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "יום %t, כל %t חודשים";
+  }
   commaEveryX0Years() {
     return ", כל %s שנים";
+  }
+  everyX0Years() {
+    return "כל %s שנים";
   }
   commaStartingX0() {
     return ", החל מ %s";

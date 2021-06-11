@@ -31,8 +31,14 @@ export class fi implements Locale {
   commaBetweenDayX0AndX1OfTheMonth(): string {
     return ", kuukauden päivien %s ja %s välillä";
   }
+  betweenDayX0AndX1OfTheMonth(): string {
+    return "kuukauden päivien %s ja %s välillä";
+  }
   commaEveryDay(): string {
     return ", joka päivä";
+  }
+  everyDay(): string {
+    return "joka päivä";
   }
   commaEveryHour(): string {
     return ", joka tunti";
@@ -43,20 +49,62 @@ export class fi implements Locale {
   commaEveryX0Days(): string {
     return ", joka %s. päivä";
   }
+  everyX0Days(): string {
+    return "joka %s. päivä";
+  }
   commaEveryX0DaysOfTheWeek(): string {
     return ", joka %s. viikonpäivä";
+  }
+  everyX0DaysOfTheWeek(): string {
+    return "joka %s. viikonpäivä";
   }
   commaEveryX0Months(): string {
     return ", joka %s. kuukausi";
   }
+  everyX0Months(): string {
+    return "joka %s. kuukausi";
+  }
+  commaEveryMonth(): string {
+    return ", joka päivä";
+  }
+  everyMonth(): string {
+    return "joka päivä";
+  }
   commaEveryX0Years(): string {
     return ", joka %s. vuosi";
+  }
+  everyX0Years(): string {
+    return "joka %s. vuosi";
   }
   commaOnDayX0OfTheMonth(): string {
     return ", kuukauden %s päivä";
   }
+  onDayX0OfTheMonth(): string {
+    return "kuukauden %s päivä";
+  }
+  commaOnDayX0() {
+    return ", päivänä %s";
+  }
+  onDayX0() {
+    return "päivä %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", jokaisen kuukauden %s. päivänä";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "jokaisen kuukauden %s. päivä";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", %s. päivänä %t kuukauden välein";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s. päivä %t kuukauden välein";
+  }
   commaOnlyInX0(): string {
     return ", vain %s";
+  }
+  onlyInX0(): string {
+    return "vain %s";
   }
   commaOnlyOnX0(): string {
     return ", vain %s";
@@ -64,11 +112,20 @@ export class fi implements Locale {
   commaOnThe(): string {
     return ",";
   }
+  onThe(): string {
+    return "";
+  }
   commaOnTheLastDayOfTheMonth(): string {
     return ", kuukauden viimeisenä päivänä";
   }
+  lastDayOfTheMonth() {
+    return "kuukauden viimeinen päivä";
+  }
   commaOnTheLastWeekdayOfTheMonth(): string {
     return ", kuukauden viimeisenä viikonpäivänä";
+  }
+  lastWeekdayOfTheMonth() {
+    return "viikon viimeinen päivä";
   }
   commaOnTheLastX0OfTheMonth(): string {
     return ", kuukauden viimeinen %s";
@@ -76,11 +133,20 @@ export class fi implements Locale {
   commaOnTheX0OfTheMonth(): string {
     return ", kuukauden %s";
   }
+  theX0OfTheMonth() {
+    return "kuukauden %s";
+  }
   commaX0ThroughX1(): string {
     return ", %s - %s";
   }
+  x0ThroughX1(): string {
+    return "%s - %s";
+  }
   commaDaysBeforeTheLastDayOfTheMonth(): string {
     return ", %s päivää ennen kuukauden viimeistä päivää";
+  }
+  daysBeforeTheLastDayOfTheMonth(): string {
+    return "%s päivää ennen kuukauden viimeistä päivää";
   }
   commaStartingX0(): string {
     return ", alkaen %s";
@@ -148,7 +214,13 @@ export class fi implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  yearX0ThroughYearX1(): string {
     return null;
   }
   lastDay() {

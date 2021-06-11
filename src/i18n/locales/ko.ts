@@ -27,10 +27,16 @@ export class ko implements Locale {
     return null;
   }
 
-  public commaYearX0ThroughYearX1(): string {
+  public monthX0ThroughMonthX1(): string {
     return null;
   }
 
+  public commaYearX0ThroughYearX1(): string {
+    return null;
+  }
+  public yearX0ThroughYearX1(): string {
+    return null;
+  }
   public use24HourTimeFormatByDefault() {
     return false;
   }
@@ -107,12 +113,24 @@ export class ko implements Locale {
     return ", 매일";
   }
 
+  public everyDay() {
+    return "매일";
+  }
+
   public commaEveryX0DaysOfTheWeek() {
     return ", 주 중 %s일마다";
   }
 
+  public everyX0DaysOfTheWeek() {
+    return "주 중 %s일마다";
+  }
+
   public commaX0ThroughX1() {
     return ", %s에서 %s가지";
+  }
+
+  public x0ThroughX1() {
+    return "%s에서 %s가지";
   }
 
   public first() {
@@ -139,6 +157,10 @@ export class ko implements Locale {
     return ", 해당 ";
   }
 
+  public onThe() {
+    return "해당 ";
+  }
+
   public spaceX0OfTheMonth() {
     return " 해당 월의 %s";
   }
@@ -163,20 +185,48 @@ export class ko implements Locale {
     return ", %s개월마다";
   }
 
+  public everyX0Months() {
+    return "%s개월마다";
+  }
+
+  public commaEveryMonth(): string {
+    return ", 매 달";
+  }
+
+  public everyMonth(): string {
+    return "매 달";
+  }
+
   public commaOnlyInX0() {
     return ", %s에서만";
+  }
+
+  public onlyInX0() {
+    return "%s에서만";
   }
 
   public commaOnTheLastDayOfTheMonth() {
     return ", 해당 월의 마지막 날에";
   }
 
+  public lastDayOfTheMonth() {
+    return "해당 월의 마지막 날에";
+  }
+
   public commaOnTheLastWeekdayOfTheMonth() {
     return ", 해당 월의 마지막 평일에";
   }
 
+  public lastWeekdayOfTheMonth() {
+    return "매월 마지막 평일";
+  }
+
   public commaDaysBeforeTheLastDayOfTheMonth() {
     return ", 해당 월의 마지막 날 %s일 전";
+  }
+
+  public daysBeforeTheLastDayOfTheMonth() {
+    return "해당 월의 마지막 날 %s일 전";
   }
 
   public firstWeekday() {
@@ -191,16 +241,52 @@ export class ko implements Locale {
     return ", 해당 월의 %s에";
   }
 
+  public theX0OfTheMonth() {
+    return "해당 월의 %s에";
+  }
+
   public commaEveryX0Days() {
     return ", %s일마다";
+  }
+
+  public everyX0Days() {
+    return "%s일마다";
   }
 
   public commaBetweenDayX0AndX1OfTheMonth() {
     return ", 해당 월의 %s일 및 %s일 사이";
   }
 
+  public betweenDayX0AndX1OfTheMonth() {
+    return "해당 월의 %s일 및 %s일 사이";
+  }
+
   public commaOnDayX0OfTheMonth() {
     return ", 해당 월의 %s일에";
+  }
+
+  public onDayX0OfTheMonth() {
+    return "해당 월의 %s일에";
+  }
+
+  commaOnDayX0() {
+    return ", %s 일";
+  }
+  onDayX0() {
+    return "%s 일차";
+  }
+
+  commaOnDayX0OfEveryMonth(): string {
+    return ", 매월 %s 일";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "매월 %s 일";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", %s 일차, %t 개월마다";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s 일차, %t 개월마다";
   }
 
   public commaEveryMinute() {
@@ -213,6 +299,10 @@ export class ko implements Locale {
 
   public commaEveryX0Years() {
     return ", %s년마다";
+  }
+
+  public everyX0Years() {
+    return "%s년마다";
   }
 
   public commaStartingX0() {

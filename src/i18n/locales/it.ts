@@ -11,10 +11,15 @@ export class it implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
     return null;
   }
-
+  yearX0ThroughYearX1(): string {
+    return null;
+  }
   use24HourTimeFormatByDefault() {
     return true;
   }
@@ -43,26 +48,74 @@ export class it implements Locale {
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", tra il giorno %s e %s del mese";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "tra il giorno %s e %s del mese";
+  }
   commaEveryDay() {
     return ", ogni giorno";
+  }
+  everyDay() {
+    return "ogni giorno";
   }
   commaEveryX0Days() {
     return ", ogni %s giorni";
   }
+  everyX0Days() {
+    return "ogni %s giorni";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", ogni %s giorni della settimana";
+  }
+  everyX0DaysOfTheWeek() {
+    return "ogni %s giorni della settimana";
   }
   commaEveryX0Months() {
     return ", ogni %s mesi";
   }
+  everyX0Months() {
+    return "ogni %s mesi";
+  }
+  commaEveryMonth(): string {
+    return ", ogni mese";
+  }
+  everyMonth(): string {
+    return "ogni mese";
+  }
   commaEveryX0Years() {
     return ", ogni %s anni";
+  }
+  everyX0Years() {
+    return "ogni %s anni";
   }
   commaOnDayX0OfTheMonth() {
     return ", il giorno %s del mese";
   }
+  onDayX0OfTheMonth() {
+    return "il giorno %s del mese";
+  }
+  commaOnDayX0() {
+    return ", il giorno %s";
+  }
+  onDayX0() {
+    return "giorno %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", il giorno %s di ogni mese";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "giorno %s di ogni mese";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", il giorno %s, ogni %t mesi";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "giorno %s, ogni %t mesi";
+  }
   commaOnlyInX0() {
     return ", solo in %s";
+  }
+  onlyInX0() {
+    return "solo in %s";
   }
   commaOnlyOnX0() {
     return ", solo il %s";
@@ -73,14 +126,26 @@ export class it implements Locale {
   commaOnThe() {
     return ", il ";
   }
+  onThe() {
+    return "il ";
+  }
   commaOnTheLastDayOfTheMonth() {
     return ", l'ultimo giorno del mese";
+  }
+  lastDayOfTheMonth() {
+    return "l'ultimo giorno del mese"
   }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", nell'ultima settimana del mese";
   }
+  lastWeekdayOfTheMonth() {
+    return "l'ultima settimana del mese";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s giorni prima dell'ultimo giorno del mese";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s giorni prima dell'ultimo giorno del mese";
   }
   commaOnTheLastX0OfTheMonth() {
     return ", l'ultimo %s del mese";
@@ -88,8 +153,14 @@ export class it implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", il %s del mese";
   }
+  theX0OfTheMonth() {
+    return "il %s del mese";
+  }
   commaX0ThroughX1() {
     return ", %s al %s";
+  }
+  x0ThroughX1() {
+    return "%s al %s";
   }
   everyHour() {
     return "ogni ora";

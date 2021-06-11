@@ -11,10 +11,15 @@ export class ca implements Locale {
   commaMonthX0ThroughMonthX1(): string {
     return null;
   }
+  monthX0ThroughMonthX1(): string {
+    return null;
+  }
   commaYearX0ThroughYearX1(): string {
     return null;
   }
-
+  yearX0ThroughYearX1(): string {
+    return null;
+  }
   use24HourTimeFormatByDefault() {
     return false;
   }
@@ -43,23 +48,68 @@ export class ca implements Locale {
   commaBetweenDayX0AndX1OfTheMonth() {
     return ", entre els dies %s i %s del mes";
   }
+  betweenDayX0AndX1OfTheMonth() {
+    return "entre els dies %s i %s del mes";
+  }
   commaEveryDay() {
     return ", cada dia";
+  }
+  everyDay() {
+    return "cada dia";
   }
   commaEveryX0Days() {
     return ", cada %s dies";
   }
+  everyX0Days() {
+    return "cada %s dies";
+  }
   commaEveryX0DaysOfTheWeek() {
     return ", cada %s dies de la setmana";
+  }
+  everyX0DaysOfTheWeek() {
+    return "cada %s dies de la setmana";
   }
   commaEveryX0Months() {
     return ", cada %s mesos";
   }
+  everyX0Months() {
+    return "cada %s mesos";
+  }
+  commaEveryMonth() {
+    return ", cada mes";
+  }
+  everyMonth() {
+    return "cada mes";
+  }
   commaOnDayX0OfTheMonth() {
     return ", el dia %s del mes";
   }
+  onDayX0OfTheMonth() {
+    return "el dia %s del mes";
+  }
+  commaOnDayX0() {
+    return ", el dia 3";
+  }
+  onDayX0() {
+    return "dia %s";
+  }
+  commaOnDayX0OfEveryMonth(): string {
+    return ", el dia %s de cada mes";
+  }
+  onDayX0OfEveryMonth(): string {
+    return "%s de cada mes";
+  }
+  commaOnDayX0OfEveryX0Months(): string {
+    return ", el dia %s, cada 3 mesos";
+  }
+  onDayX0OfEveryX0Months(): string {
+    return "%s, cada 3 mesos";
+  }
   commaOnlyInX0() {
     return ", sólo en %s";
+  }
+  onlyInX0() {
+    return "sólo en %s";
   }
   commaOnlyOnX0() {
     return ", només el %s";
@@ -70,14 +120,26 @@ export class ca implements Locale {
   commaOnThe() {
     return ", en el ";
   }
+  onThe() {
+    return "en el ";
+  }
   commaOnTheLastDayOfTheMonth() {
     return ", en l'últim dia del mes";
+  }
+  lastDayOfTheMonth() {
+    return "l'últim dia del mes";
   }
   commaOnTheLastWeekdayOfTheMonth() {
     return ", en l'últim dia de la setmana del mes";
   }
+  lastWeekdayOfTheMonth() {
+    return "l'últim dia de la setmana del mes";
+  }
   commaDaysBeforeTheLastDayOfTheMonth() {
     return ", %s dies abans de l'últim dia del mes";
+  }
+  daysBeforeTheLastDayOfTheMonth() {
+    return "%s dies abans de l'últim dia del mes";
   }
   commaOnTheLastX0OfTheMonth() {
     return ", en l'últim %s del mes";
@@ -85,8 +147,14 @@ export class ca implements Locale {
   commaOnTheX0OfTheMonth() {
     return ", en el %s del mes";
   }
+  theX0OfTheMonth() {
+    return "el %s del mes";
+  }
   commaX0ThroughX1() {
     return ", de %s a %s";
+  }
+  x0ThroughX1() {
+    return "de %s a %s";
   }
   everyHour() {
     return "cada hora";
@@ -147,6 +215,9 @@ export class ca implements Locale {
   }
   commaEveryX0Years() {
     return ", cada %s anys";
+  }
+  everyX0Years() {
+    return "cada %s anys";
   }
   commaStartingX0() {
     return ", començant %s";
